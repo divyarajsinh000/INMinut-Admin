@@ -97,6 +97,12 @@ const AdvertisementList = () => {
                     <span className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full font-black">
                       After {item.positionAfterNews || 4} news
                     </span>
+                    <span className="text-xs px-3 py-1.5 bg-sky-50 text-sky-700 rounded-full font-black">
+                      {item.viewCount || 0} Views
+                    </span>
+                    <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
+                      {item.clickCount || 0} Clicks
+                    </span>
                     <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.cities?.length ? "bg-purple-50 text-purple-700" : "bg-amber-50 text-amber-700"}`}>
                       {getCityLabel(item.cities)}
                     </span>

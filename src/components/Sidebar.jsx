@@ -11,8 +11,11 @@ import {
   FiImage,
   FiBarChart2,
   FiX,
+  FiUser,
+  FiCode,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { getFullMediaUrl } from "../components/MediaPreview";
 
 const Sidebar = ({ open = false, onClose = () => {} }) => {
   const location = useLocation();
@@ -36,12 +39,16 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
     }`;
 
   const navItems = user?.role === "reporter"
-    ? [{ to: "/news", icon: FiFileText, label: "News" }]
+    ? [
+        { to: "/news", icon: FiFileText, label: "News" },
+        { to: "/profile", icon: FiUser, label: "Profile" },
+      ]
     : [
         { to: "/dashboard", icon: FiHome, label: "Dashboard" },
         { to: "/news", icon: FiFileText, label: "News" },
         { to: "/analytics", icon: FiBarChart2, label: "Analytics" },
         { to: "/advertisements", icon: FiImage, label: "Advertisements" },
+        { to: "/profile", icon: FiUser, label: "Profile" },
       ];
 
   const superAdminItems = [
@@ -49,6 +56,7 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
     { to: "/locations", icon: FiMapPin, label: "Locations" },
     { to: "/guest-users", icon: FiSmartphone, label: "App Users" },
     { to: "/users", icon: FiUsers, label: "Admin Users" },
+    { to: "/embeds", icon: FiCode, label: "Embed Codes" },
   ];
 
   return (
@@ -80,12 +88,25 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
         </button>
       </div>
 
-      <div className="relative z-10 m-4 rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur">
-        <p className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">Logged in as</p>
-        <p className="mt-1 truncate font-black">{user?.name || "Admin"}</p>
-        <span className="mt-3 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-xs font-black text-cyan-200">
-          {user?.role === "super-admin" ? "Super Admin" : user?.role === "reporter" ? "Reporter" : "Editor"}
-        </span>
+      <div className="relative z-10 m-4 rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur flex items-center gap-3">
+        {user?.profileImage ? (
+          <img
+            src={getFullMediaUrl(user.profileImage)}
+            alt="Profile Avatar"
+            className="w-12 h-12 rounded-full object-cover border border-white/20 shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-cyan-500/20 border border-white/20 flex items-center justify-center text-cyan-300 shrink-0">
+            <FiUser size={20} />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Logged in as</p>
+          <p className="truncate font-black text-sm">{user?.name || "Admin"}</p>
+          <span className="mt-1 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2.5 py-0.5 text-[10px] font-black text-cyan-200 uppercase">
+            {user?.role === "super-admin" ? "Super Admin" : user?.role || "Editor"}
+          </span>
+        </div>
       </div>
 
       <nav className="relative z-10 flex-1 space-y-2 overflow-y-auto px-4 pb-4">

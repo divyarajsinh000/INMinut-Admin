@@ -28,6 +28,7 @@ const FILTERS = [
 ];
 
 const getPrimaryMedia = (item) => (Array.isArray(item?.media) && item.media.length > 0 ? item.media[0] : null);
+const stripHtml = (html) => (html || "").replace(/<[^>]*>?/gm, "").replace(/&nbsp;/g, " ").trim();
 
 const NewsList = () => {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ const NewsList = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
   const [savingOrder, setSavingOrder] = useState(false);
   const [analyticsTotals, setAnalyticsTotals] = useState({ totalViews: 0, totalSaves: 0, totalShares: 0, totalNews: 0 });
   const [sortBy, setSortBy] = useState("manual");
@@ -136,11 +138,21 @@ const NewsList = () => {
     }
   };
 
-  const handleDragStart = (id) => {
+  const handleDragStart = (e, id) => {
     setDraggedId(id);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", id);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
   };
 
   const handleDrop = (targetId) => {
+    setDragOverId(null);
     if (!draggedId || draggedId === targetId) return;
 
     const draggedIndex = news.findIndex((item) => item._id === draggedId);
@@ -250,11 +262,32 @@ const NewsList = () => {
             <article
               key={item._id}
               draggable={!isReporter && sortBy === "manual"}
-              onDragStart={() => !isReporter && sortBy === "manual" && handleDragStart(item._id)}
-              onDragOver={(e) => !isReporter && sortBy === "manual" && e.preventDefault()}
+              onDragStart={(e) => !isReporter && sortBy === "manual" && handleDragStart(e, item._id)}
+              onDragOver={(e) => {
+                if (!isReporter && sortBy === "manual") {
+                  e.preventDefault();
+                  if (draggedId && draggedId !== item._id && dragOverId !== item._id) {
+                    setDragOverId(item._id);
+                  }
+                }
+              }}
+              onDragLeave={() => {
+                if (dragOverId === item._id) {
+                  setDragOverId(null);
+                }
+              }}
+              onDragEnd={handleDragEnd}
               onDrop={() => !isReporter && sortBy === "manual" && handleDrop(item._id)}
-              className={`rounded-[1.6rem] border bg-white/90 p-5 shadow-sm backdrop-blur transition hover:shadow-xl hover:shadow-cyan-100 ${
-                draggedId === item._id ? "border-cyan-400 opacity-60" : item.isPinned ? "border-cyan-300" : "border-white/80"
+              className={`rounded-[1.6rem] border bg-white/90 p-5 shadow-sm backdrop-blur transition-all duration-200 hover:shadow-xl hover:shadow-cyan-100 ${
+                !isReporter && sortBy === "manual" ? "cursor-grab active:cursor-grabbing hover:border-cyan-200" : ""
+              } ${
+                draggedId === item._id
+                  ? "opacity-30 border-dashed border-cyan-400 scale-[0.98]"
+                  : dragOverId === item._id
+                    ? "border-cyan-500 bg-cyan-50/40 translate-y-1 shadow-md ring-2 ring-cyan-500/20"
+                    : item.isPinned
+                      ? "border-cyan-300"
+                      : "border-white/80"
               }`}
             >
               <div className="grid grid-cols-1 gap-5 xl:grid-cols-[260px_1fr_auto] xl:items-start">
@@ -315,7 +348,7 @@ const NewsList = () => {
                       className="line-clamp-2 font-medium leading-6 text-slate-600"
                       style={{ fontSize: `${item.descriptionFontSize || 16}px` }}
                     >
-                      {item.description}
+                      {stripHtml(item.description)}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">

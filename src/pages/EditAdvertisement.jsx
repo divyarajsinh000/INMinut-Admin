@@ -53,7 +53,7 @@ const EditAdvertisement = () => {
         label: ad.label || "Advertisement",
         redirectUrl: ad.redirectUrl || "",
         cities: getCityIds(ad.cities),
-        positionAfterNews: ad.positionAfterNews || 4,
+        positionAfterNews: ad.positionAfterNews !== undefined ? ad.positionAfterNews : 4,
         isEnabled: Boolean(ad.isEnabled),
       });
       setPreview(getImageUrl(ad.bannerImage));
@@ -165,7 +165,7 @@ const EditAdvertisement = () => {
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Show after how many news?</label>
-            <input name="positionAfterNews" type="number" min="1" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
           </div>
 
           <div>

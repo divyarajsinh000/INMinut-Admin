@@ -130,8 +130,8 @@ const AddAdvertisement = () => {
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Show after how many news?</label>
-            <input name="positionAfterNews" type="number" min="1" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
-            <p className="text-xs text-slate-500 mt-1">Default is 4, so the ad will display after the 4th news card.</p>
+            <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <p className="text-xs text-slate-500 mt-1">Set to 0 to show at the very top of the feed, or 4 to show after the 4th news card.</p>
           </div>
 
           <div>

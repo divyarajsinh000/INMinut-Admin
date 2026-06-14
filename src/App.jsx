@@ -16,6 +16,10 @@ import AdvertisementList from "./pages/AdvertisementList";
 import Analytics from "./pages/Analytics";
 import AddAdvertisement from "./pages/AddAdvertisement";
 import EditAdvertisement from "./pages/EditAdvertisement";
+import EmbedList from "./pages/EmbedList";
+import AddEmbed from "./pages/AddEmbed";
+import EditEmbed from "./pages/EditEmbed";
+import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -33,6 +37,15 @@ function App() {
             element={
               <ProtectedRoute roles={["super-admin", "editor"]}>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
@@ -171,6 +184,33 @@ function App() {
             element={
               <ProtectedRoute roles={["super-admin"]}>
                 <EditAdvertisement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/embeds"
+            element={
+              <ProtectedRoute roles={["super-admin"]}>
+                <EmbedList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/embeds/add"
+            element={
+              <ProtectedRoute roles={["super-admin"]}>
+                <AddEmbed />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/embeds/edit/:id"
+            element={
+              <ProtectedRoute roles={["super-admin"]}>
+                <EditEmbed />
               </ProtectedRoute>
             }
           />

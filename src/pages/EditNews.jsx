@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import MediaSlider from "../components/MediaSlider";
+import QuillEditor from "../components/QuillEditor";
 
 const EditNews = () => {
   const { id } = useParams();
@@ -14,23 +16,76 @@ const EditNews = () => {
   const [fetching, setFetching] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [mediaToKeep, setMediaToKeep] = useState([]);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     titleColor: "#111827",
     titleFontSize: 22,
     description: "",
     descriptionFontSize: 16,
-    content: "",
     media: [],
     category: "",
     reporter: { name: "", avatar: "" },
     hashtags: [""],
     isBreaking: false,
     breakingText: "Breaking News",
+    breakingBgColor: "#EF4444",
+    breakingTextColor: "#FFFFFF",
+    isBreakingBlink: false,
     isActive: true,
     publishedDate: new Date().toISOString().split("T")[0],
     cities: [],
   });
+
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+
+  const keptVideos = form.media
+    ? form.media.filter(m => getMediaType(m) === "video" && mediaToKeep.includes(m._id))
+    : [];
+  const selectedVideos = selectedFiles.filter(file => getMediaType(file) === "video");
+  const videos = [
+    ...keptVideos.map(v => ({ name: v.originalName || v.url.split("/").pop() })),
+    ...selectedVideos.map(v => ({ name: v.name }))
+  ];
+
+  const keptPdfs = form.media
+    ? form.media.filter(m => getMediaType(m) === "pdf" && mediaToKeep.includes(m._id))
+    : [];
+  const selectedPdfs = selectedFiles.filter(file => getMediaType(file) === "pdf");
+  const pdfs = [
+    ...keptPdfs.map(p => ({ name: p.originalName || p.url.split("/").pop() })),
+    ...selectedPdfs.map(p => ({ name: p.name }))
+  ];
+
+  useEffect(() => {
+    // Check if there are new selected files that are images
+    const newImgFile = selectedFiles.find(file => {
+      const type = getMediaType(file);
+      return type === "image";
+    });
+
+    if (newImgFile) {
+      const objectUrl = URL.createObjectURL(newImgFile);
+      setPreviewImageUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+
+    // Check if there are existing media files that are images
+    if (form.media && form.media.length > 0) {
+      const keptMedia = mediaToKeep ? form.media.filter(m => mediaToKeep.includes(m._id)) : form.media;
+      const existingImg = keptMedia.find(m => {
+        const type = getMediaType(m);
+        return type === "image";
+      });
+      if (existingImg) {
+        setPreviewImageUrl(getFullMediaUrl(existingImg.url));
+        return;
+      }
+    }
+
+    setPreviewImageUrl("");
+  }, [selectedFiles, form.media, mediaToKeep]);
 
   const fetchCategories = async () => {
     try {
@@ -61,6 +116,9 @@ const EditNews = () => {
         titleFontSize: news.titleFontSize || 22,
         descriptionFontSize: news.descriptionFontSize || 16,
         breakingText: news.breakingText || "Breaking News",
+        breakingBgColor: news.breakingBgColor || "#EF4444",
+        breakingTextColor: news.breakingTextColor || "#FFFFFF",
+        isBreakingBlink: !!news.isBreakingBlink,
         isActive: news.isActive !== false,
         publishedDate: new Date(news.publishedDate).toISOString().split("T")[0],
         hashtags: news.hashtags.length > 0 ? news.hashtags : [""],
@@ -163,12 +221,13 @@ const EditNews = () => {
       formData.append('titleFontSize', form.titleFontSize || 22);
       formData.append('description', form.description);
       formData.append('descriptionFontSize', form.descriptionFontSize || 16);
-      formData.append('content', form.content);
       formData.append('category', form.category);
-      formData.append('reporter', JSON.stringify(form.reporter));
       formData.append('hashtags', JSON.stringify(form.hashtags.filter((tag) => tag.trim())));
       formData.append('isBreaking', form.isBreaking);
       formData.append('breakingText', form.breakingText || 'Breaking News');
+      formData.append('breakingBgColor', form.breakingBgColor || '#EF4444');
+      formData.append('breakingTextColor', form.breakingTextColor || '#FFFFFF');
+      formData.append('isBreakingBlink', form.isBreakingBlink);
       formData.append('isActive', form.isActive);
       formData.append('publishedDate', form.publishedDate);
       formData.append('cities', JSON.stringify(form.cities || []));
@@ -209,7 +268,9 @@ const EditNews = () => {
 
   return (
     <AdminLayout title="Edit News">
-          <div className="bg-white rounded-2xl shadow-sm border p-6 max-w-3xl">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left Side: Form */}
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border p-6 w-full lg:max-w-3xl">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
@@ -219,7 +280,6 @@ const EditNews = () => {
                   name="title"
                   value={form.title}
                   onChange={handleChange}
-                  required
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -265,52 +325,25 @@ const EditNews = () => {
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   Description
                 </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  required
-                  rows={3}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Description Font Size
-                  </label>
-                  <input
-                    name="descriptionFontSize"
-                    type="number"
-                    min="10"
-                    max="40"
-                    value={form.descriptionFontSize}
-                    onChange={handleChange}
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                <div className="w-full bg-white">
+                  <QuillEditor
+                    value={form.description}
+                    onChange={(value) => setForm((prev) => ({ ...prev, description: value }))}
                   />
-                </div>
-                <div className="rounded-2xl border bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-wide text-slate-500">App Preview</p>
-                  <h3 className="mt-2 font-black" style={{ color: form.titleColor || "#111827", fontSize: `${form.titleFontSize || 22}px` }}>
-                    {form.title || "News title preview"}
-                  </h3>
-                  <p className="mt-2 text-slate-600" style={{ fontSize: `${form.descriptionFontSize || 16}px` }}>
-                    {form.description || "Description preview"}
-                  </p>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
-                  Content
+                  Description Font Size
                 </label>
-                <textarea
-                  name="content"
-                  value={form.content}
+                <input
+                  name="descriptionFontSize"
+                  type="number"
+                  min="10"
+                  max="40"
+                  value={form.descriptionFontSize}
                   onChange={handleChange}
-                  required
-                  rows={6}
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -323,7 +356,6 @@ const EditNews = () => {
                   name="category"
                   value={form.category}
                   onChange={handleChange}
-                  required
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
                 >
                   <option value="">Select category</option>
@@ -353,33 +385,6 @@ const EditNews = () => {
                   ))}
                 </select>
                 <p className="text-xs text-slate-500 mt-1">Hold Ctrl on Windows to select multiple cities. Leave empty for all cities/general news.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Reporter Name
-                  </label>
-                  <input
-                    name="reporter.name"
-                    value={form.reporter.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Reporter Avatar URL
-                  </label>
-                  <input
-                    name="reporter.avatar"
-                    value={form.reporter.avatar}
-                    onChange={handleChange}
-                    required
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                  />
-                </div>
               </div>
 
               <div>
@@ -465,19 +470,83 @@ const EditNews = () => {
                 </div>
 
                 {form.isBreaking && (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">
-                      Breaking News Display Text
-                    </label>
-                    <input
-                      name="breakingText"
-                      value={form.breakingText}
-                      onChange={handleChange}
-                      maxLength={80}
-                      placeholder="Example: Breaking News, Big Update, Alert"
-                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">This exact text will show in the app instead of fixed Breaking News text.</p>
+                  <div className="space-y-4 pt-2 border-t border-slate-200">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">
+                        Breaking News Display Text
+                      </label>
+                      <input
+                        name="breakingText"
+                        value={form.breakingText}
+                        onChange={handleChange}
+                        maxLength={80}
+                        placeholder="Example: Breaking News, Big Update, Alert"
+                        className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                      />
+                      <p className="mt-1 text-xs text-slate-500">This exact text will show in the app instead of fixed Breaking News text.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Background Color
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            name="breakingBgColor"
+                            value={form.breakingBgColor || '#EF4444'}
+                            onChange={handleChange}
+                            className="h-11 w-11 rounded-lg border cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            name="breakingBgColor"
+                            value={form.breakingBgColor || '#EF4444'}
+                            onChange={handleChange}
+                            placeholder="#EF4444"
+                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 text-sm font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Text Color
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            name="breakingTextColor"
+                            value={form.breakingTextColor || '#FFFFFF'}
+                            onChange={handleChange}
+                            className="h-11 w-11 rounded-lg border cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            name="breakingTextColor"
+                            value={form.breakingTextColor || '#FFFFFF'}
+                            onChange={handleChange}
+                            placeholder="#FFFFFF"
+                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 text-sm font-medium"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                      <input
+                        id="isBreakingBlink"
+                        name="isBreakingBlink"
+                        type="checkbox"
+                        checked={form.isBreakingBlink}
+                        onChange={handleChange}
+                        className="w-5 h-5 accent-cyan-500"
+                      />
+                      <label htmlFor="isBreakingBlink" className="text-sm font-semibold text-slate-700">
+                        Enable Blinking Animation for Badge
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>
@@ -508,7 +577,6 @@ const EditNews = () => {
                   type="date"
                   value={form.publishedDate}
                   onChange={handleChange}
-                  required
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -531,6 +599,203 @@ const EditNews = () => {
               </div>
             </form>
           </div>
+
+        {/* Right Side: Live Preview */}
+        <div className="w-full lg:w-[380px] space-y-4 shrink-0">
+          <div className="bg-slate-100 rounded-[30px] p-4 border-4 border-slate-300 shadow-xl w-full">
+            <div className="text-center mb-2">
+              <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">LIVE APP PREVIEW</span>
+            </div>
+
+            {/* The Phone/Card Outer Shell */}
+            <div className="bg-white rounded-[24px] overflow-hidden shadow-md border border-slate-200 h-[620px] flex flex-col justify-between relative">
+              
+              {/* Scrollable Container for Card Content */}
+              <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                
+                {/* 1. Image/Media Section */}
+                {previewImageUrl ? (
+                  <div className="relative h-56 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                    <img
+                      src={previewImageUrl}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+
+                    {/* Breaking Badge overlay on Image */}
+                    {form.isBreaking && (
+                      <div
+                        className="absolute top-0 left-0 flex items-center gap-1 px-3 py-1.5 font-black uppercase text-[10px] tracking-wider select-none"
+                        style={{
+                          backgroundColor: form.breakingBgColor || "#EF4444",
+                          color: form.breakingTextColor || "#FFFFFF",
+                          borderTopLeftRadius: "20px",
+                          borderBottomRightRadius: "14px",
+                          animation: form.isBreakingBlink ? "pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                        }}
+                      >
+                        <span style={{ color: "#FACC15" }}>⚡</span>
+                        <span>{form.breakingText || "Breaking"}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Card Content Area */}
+                <div className="p-4">
+                  {/* Category and Date Row */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full"
+                      style={{
+                        backgroundColor: categories.find((cat) => cat._id === form.category)?.backgroundColor || "#E2E8F0",
+                        color: categories.find((cat) => cat._id === form.category)?.textColor || "#475569",
+                      }}
+                    >
+                      {categories.find((cat) => cat._id === form.category)?.name || "Category"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold">
+                      {form.publishedDate ? new Date(form.publishedDate).toLocaleDateString() : "Today"}
+                    </span>
+                  </div>
+
+                  {/* Inline Breaking Badge (when no image) */}
+                  {!previewImageUrl && form.isBreaking && (
+                    <div
+                      className="inline-flex items-center gap-1 px-3 py-1.5 font-black uppercase text-[10px] tracking-wider mb-2.5"
+                      style={{
+                        backgroundColor: form.breakingBgColor || "#EF4444",
+                        color: form.breakingTextColor || "#FFFFFF",
+                        borderTopLeftRadius: "12px",
+                        borderBottomRightRadius: "12px",
+                        borderTopRightRadius: "4px",
+                        borderBottomLeftRadius: "4px",
+                        animation: form.isBreakingBlink ? "pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                      }}
+                    >
+                      <span style={{ color: "#FACC15" }}>⚡</span>
+                      <span>{form.breakingText || "Breaking"}</span>
+                    </div>
+                  )}
+
+                  {/* News Title */}
+                  <h3
+                    className="font-black leading-tight mb-2 tracking-tight line-clamp-2"
+                    style={{
+                      color: form.titleColor || "#111827",
+                      fontSize: `${form.titleFontSize || 20}px`,
+                    }}
+                  >
+                    {form.title || "News Title Preview"}
+                  </h3>
+
+                  {/* News Description */}
+                  <div className="mb-2">
+                    <div
+                      className={`text-slate-600 font-medium ql-editor !p-0 ${previewExpanded ? "" : "line-clamp-[5] text-ellipsis overflow-hidden"}`}
+                      style={{
+                        fontSize: `${form.descriptionFontSize || 14}px`,
+                        lineHeight: 1.45,
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: form.description || "<p>News description preview will show here...</p>",
+                      }}
+                    />
+                    {form.description && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewExpanded(!previewExpanded)}
+                        className="text-[11px] font-black text-[#F97316] mt-1 hover:underline focus:outline-none"
+                      >
+                        {previewExpanded ? "Read less" : "... Read more"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Videos Preview */}
+                  {videos.map((vid, idx) => (
+                    <div key={`vid-${idx}`} className="w-full h-40 bg-slate-900 rounded-2xl overflow-hidden relative flex items-center justify-center text-white my-3 shrink-0 select-none">
+                      <span className="absolute top-2 left-2 bg-black/60 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Video</span>
+                      <div className="w-10 h-10 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-white backdrop-blur-sm">
+                        <svg className="w-5 h-5 fill-current translate-x-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                      <span className="absolute bottom-2 left-3 text-[10px] truncate max-w-[85%] font-bold text-slate-300">
+                        {vid.name || "Video attachment"}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* PDFs Preview */}
+                  {pdfs.map((pdf, idx) => (
+                    <div key={`pdf-${idx}`} className="w-full flex items-center gap-3 p-3 bg-sky-50 border border-sky-100 rounded-2xl my-3 text-sky-950 shrink-0">
+                      <div className="w-9 h-9 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-bold truncate">{pdf.name || "Document.pdf"}</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">PDF Document</p>
+                      </div>
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+
+              {/* Card Footer (Reporter & Actions) */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
+                <div className="flex items-center justify-between">
+                  {/* Reporter Info */}
+                  {(form.reporter?.name?.trim() || form.reporter?.avatar?.trim()) ? (
+                    <div className="flex items-center gap-2 max-w-[60%]">
+                      {form.reporter?.avatar?.trim() && (
+                        <img
+                          src={getFullMediaUrl(form.reporter.avatar)}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full border border-slate-200 object-cover"
+                        />
+                      )}
+                      {form.reporter?.name?.trim() && (
+                        <span className="text-[11px] font-bold text-slate-800 truncate">
+                          {form.reporter.name}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    {/* Share Button */}
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 10.742l4.685-2.618m0 5.748L8.684 13.26m5.916-7.38c1.332 0 2.41 1.078 2.41 2.41 0 1.333-1.078 2.41-2.41 2.41-1.333 0-2.41-1.078-2.41-2.41 0-1.332 1.077-2.41 2.41-2.41zm0 9.782c1.332 0 2.41 1.078 2.41 2.41 0 1.333-1.078 2.41-2.41 2.41-1.333 0-2.41-1.078-2.41-2.41 0-1.332 1.077-2.41 2.41-2.41z" />
+                      </svg>
+                    </div>
+                    {/* Save Button */}
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
+      `}</style>
     </AdminLayout>
   );
 };
