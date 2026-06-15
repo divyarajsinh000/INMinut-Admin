@@ -7,6 +7,7 @@ import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import MediaSlider from "../components/MediaSlider";
 import QuillEditor from "../components/QuillEditor";
+import ImageCropModal from "../components/ImageCropModal";
 
 const AddNews = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const AddNews = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [cropFile, setCropFile] = useState(null);
+  const [cropQueue, setCropQueue] = useState([]);
 
   const videos = selectedFiles.filter(file => getMediaType(file) === "video");
   const pdfs = selectedFiles.filter(file => getMediaType(file) === "pdf");
@@ -36,6 +39,7 @@ const AddNews = () => {
   }, [selectedFiles]);
   const [form, setForm] = useState({
     title: "",
+    titleLink: "",
     titleColor: "#111827",
     titleFontSize: 22,
     description: "",
@@ -115,14 +119,53 @@ const AddNews = () => {
     });
   };
 
+  const showNextCropImage = () => {
+    setCropQueue((prev) => {
+      const [nextFile, ...remainingFiles] = prev;
+      setCropFile(nextFile || null);
+      return remainingFiles;
+    });
+  };
+
+  const enqueueImageFilesForCrop = (imageFiles) => {
+    if (!imageFiles.length) return;
+
+    if (!cropFile) {
+      const [firstFile, ...remainingFiles] = imageFiles;
+      setCropFile(firstFile);
+      if (remainingFiles.length) {
+        setCropQueue((prev) => [...prev, ...remainingFiles]);
+      }
+      return;
+    }
+
+    setCropQueue((prev) => [...prev, ...imageFiles]);
+  };
+
+  const handleCropDone = (croppedFile) => {
+    setSelectedFiles((prev) => [...prev, croppedFile]);
+    showNextCropImage();
+  };
+
+  const handleUseOriginalImage = () => {
+    if (cropFile) {
+      setSelectedFiles((prev) => [...prev, cropFile]);
+    }
+    showNextCropImage();
+  };
+
+  const handleCancelCropImage = () => {
+    showNextCropImage();
+  };
+
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     const validTypes = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
       'video/mp4', 'video/webm', 'video/ogg',
       'application/pdf'
     ];
-    
+
     const validFiles = files.filter(file => {
       if (!validTypes.includes(file.type)) {
         toast.error(`Invalid file type: ${file.name}`);
@@ -130,8 +173,15 @@ const AddNews = () => {
       }
       return true;
     });
-    
-    setSelectedFiles(prev => [...prev, ...validFiles]);
+
+    const imageFiles = validFiles.filter(file => file.type.startsWith('image/'));
+    const otherFiles = validFiles.filter(file => !file.type.startsWith('image/'));
+
+    if (otherFiles.length) {
+      setSelectedFiles(prev => [...prev, ...otherFiles]);
+    }
+
+    enqueueImageFilesForCrop(imageFiles);
     e.target.value = "";
   };
 
@@ -146,6 +196,7 @@ const AddNews = () => {
       
       const formData = new FormData();
       formData.append('title', form.title);
+      formData.append('titleLink', form.titleLink || '');
       formData.append('titleColor', form.titleColor || '#111827');
       formData.append('titleFontSize', form.titleFontSize || 22);
       formData.append('description', form.description);
@@ -208,6 +259,23 @@ const AddNews = () => {
                   onChange={handleChange}
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Title Link <span className="text-xs font-medium text-slate-400">(optional)</span>
+                </label>
+                <input
+                  name="titleLink"
+                  type="url"
+                  value={form.titleLink || ""}
+                  onChange={handleChange}
+                  placeholder="https://example.com/news-details"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+                <p className="mt-1 text-xs font-medium text-slate-400">
+                  If link is added, the title becomes clickable. Leave empty to keep title normal.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -592,15 +660,30 @@ const AddNews = () => {
                   )}
 
                   {/* News Title */}
-                  <h3
-                    className="font-black leading-tight mb-2 tracking-tight line-clamp-2"
-                    style={{
-                      color: form.titleColor || "#111827",
-                      fontSize: `${form.titleFontSize || 20}px`,
-                    }}
-                  >
-                    {form.title || "News Title Preview"}
-                  </h3>
+                  {form.titleLink ? (
+                    <a
+                      href={form.titleLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-2 block font-black leading-tight tracking-tight line-clamp-2 underline decoration-cyan-400 underline-offset-4"
+                      style={{
+                        color: form.titleColor || "#111827",
+                        fontSize: `${form.titleFontSize || 20}px`,
+                      }}
+                    >
+                      {form.title || "News Title Preview"}
+                    </a>
+                  ) : (
+                    <h3
+                      className="font-black leading-tight mb-2 tracking-tight line-clamp-2"
+                      style={{
+                        color: form.titleColor || "#111827",
+                        fontSize: `${form.titleFontSize || 20}px`,
+                      }}
+                    >
+                      {form.title || "News Title Preview"}
+                    </h3>
+                  )}
 
                   {/* News Description */}
                   <div className="mb-2">
@@ -703,6 +786,15 @@ const AddNews = () => {
           </div>
         </div>
       </div>
+
+      <ImageCropModal
+        file={cropFile}
+        title="Crop News Image"
+        aspect={16 / 9}
+        onCropDone={handleCropDone}
+        onUseOriginal={handleUseOriginalImage}
+        onCancel={handleCancelCropImage}
+      />
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

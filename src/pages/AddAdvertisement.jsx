@@ -4,6 +4,7 @@ import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import MediaPreview from "../components/MediaPreview";
+import ImageCropModal from "../components/ImageCropModal";
 
 const AddAdvertisement = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const AddAdvertisement = () => {
   const [loading, setLoading] = useState(false);
   const [bannerImage, setBannerImage] = useState(null);
   const [preview, setPreview] = useState("");
+  const [cropFile, setCropFile] = useState(null);
   const [form, setForm] = useState({
     name: "",
     label: "Advertisement",
@@ -47,12 +49,25 @@ const AddAdvertisement = () => {
 
     if (!file.type.startsWith("image/")) {
       toast.error("Please select only image file");
+      e.target.value = "";
       return;
     }
 
-    setBannerImage(file);
-    setPreview(URL.createObjectURL(file));
+    setCropFile(file);
     e.target.value = "";
+  };
+
+  const handleCropDone = (croppedFile) => {
+    setBannerImage(croppedFile);
+    setPreview(URL.createObjectURL(croppedFile));
+    setCropFile(null);
+  };
+
+  const handleUseOriginalImage = () => {
+    if (!cropFile) return;
+    setBannerImage(cropFile);
+    setPreview(URL.createObjectURL(cropFile));
+    setCropFile(null);
   };
 
   const handleSubmit = async (e) => {
@@ -141,7 +156,7 @@ const AddAdvertisement = () => {
               <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <MediaPreview src={preview} type="image" name={bannerImage?.name || "Advertisement banner"} showName className="h-72" />
                 <p className="mt-2 text-xs font-semibold text-slate-500">
-                  Vertical and horizontal images are shown with full image preview. No crop is applied here.
+                  Use crop before saving. You can also use original image from crop popup.
                 </p>
               </div>
             )}
@@ -162,6 +177,16 @@ const AddAdvertisement = () => {
           </div>
         </form>
       </div>
+
+      <ImageCropModal
+        file={cropFile}
+        title="Crop Advertisement Banner"
+        aspect={16 / 9}
+        cropShape="rect"
+        onCropDone={handleCropDone}
+        onUseOriginal={handleUseOriginalImage}
+        onCancel={() => setCropFile(null)}
+      />
     </AdminLayout>
   );
 };

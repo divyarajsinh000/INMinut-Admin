@@ -16,6 +16,8 @@ import {
   FiShare2,
   FiBarChart2,
   FiX,
+  FiPower,
+  FiExternalLink,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import MediaPreview from "../components/MediaPreview";
@@ -41,6 +43,7 @@ const NewsList = () => {
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [togglingActiveId, setTogglingActiveId] = useState(null);
   const [analyticsTotals, setAnalyticsTotals] = useState({ totalViews: 0, totalSaves: 0, totalShares: 0, totalNews: 0 });
   const [sortBy, setSortBy] = useState("manual");
 
@@ -119,6 +122,27 @@ const NewsList = () => {
       fetchNews(sortBy, searchQuery);
     } catch (error) {
       toast.error("Failed to update pin status");
+    }
+  };
+
+  const toggleActive = async (id) => {
+    if (isReporter || togglingActiveId) return;
+    try {
+      setTogglingActiveId(id);
+      const res = await axiosInstance.patch(`/news/${id}/toggle-active`);
+      const updatedNews = res.data?.data;
+
+      if (updatedNews?._id) {
+        setNews((prev) => prev.map((item) => (item._id === id ? { ...item, ...updatedNews } : item)));
+      } else {
+        setNews((prev) => prev.map((item) => (item._id === id ? { ...item, isActive: item.isActive === false } : item)));
+      }
+
+      toast.success(res.data?.message || "News visibility updated");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to update news visibility");
+    } finally {
+      setTogglingActiveId(null);
     }
   };
 
@@ -338,12 +362,27 @@ const NewsList = () => {
                         {item.isActive === false ? "Off / Hidden" : "On / Visible"}
                       </span>
                     </div>
-                    <h3
-                      className="mb-2 line-clamp-2 font-black"
-                      style={{ color: item.titleColor || "#0f172a", fontSize: `${item.titleFontSize || 20}px` }}
-                    >
-                      {item.title}
-                    </h3>
+                    {item.titleLink ? (
+                      <a
+                        href={item.titleLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                        className="mb-2 inline-flex max-w-full items-start gap-1 line-clamp-2 font-black underline decoration-cyan-400 underline-offset-4 hover:text-cyan-600"
+                        style={{ color: item.titleColor || "#0f172a", fontSize: `${item.titleFontSize || 20}px` }}
+                        title={item.titleLink}
+                      >
+                        <span className="line-clamp-2">{item.title}</span>
+                        <FiExternalLink className="mt-1 shrink-0 text-cyan-500" size={16} />
+                      </a>
+                    ) : (
+                      <h3
+                        className="mb-2 line-clamp-2 font-black"
+                        style={{ color: item.titleColor || "#0f172a", fontSize: `${item.titleFontSize || 20}px` }}
+                      >
+                        {item.title}
+                      </h3>
+                    )}
                     <p
                       className="line-clamp-2 font-medium leading-6 text-slate-600"
                       style={{ fontSize: `${item.descriptionFontSize || 16}px` }}
@@ -370,6 +409,19 @@ const NewsList = () => {
                 </div>
 
                 <div className="order-3 flex shrink-0 gap-2 self-end xl:order-none xl:self-start">
+                  {!isReporter && (
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(item._id)}
+                      disabled={togglingActiveId === item._id}
+                      className={`rounded-2xl p-3 transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                        item.isActive === false ? "bg-slate-200 hover:bg-slate-300" : "bg-emerald-50 hover:bg-emerald-100"
+                      }`}
+                      title={item.isActive === false ? "Turn news on" : "Turn news off"}
+                    >
+                      <FiPower className={item.isActive === false ? "text-slate-600" : "text-emerald-600"} />
+                    </button>
+                  )}
                   {!isReporter && (
                     <button type="button" onClick={() => togglePin(item._id)} className={`rounded-2xl p-3 ${item.isPinned ? "bg-cyan-100" : "bg-slate-100 hover:bg-slate-200"}`} title={item.isPinned ? "Unpin" : "Pin to top"}>
                       <FiStar className={item.isPinned ? "text-cyan-600" : "text-slate-700"} />

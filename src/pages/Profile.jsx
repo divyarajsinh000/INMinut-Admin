@@ -5,12 +5,14 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { getFullMediaUrl } from "../components/MediaPreview";
 import { FiCamera, FiMail, FiUser, FiKey, FiShield } from "react-icons/fi";
+import ImageCropModal from "../components/ImageCropModal";
 
 const Profile = () => {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [cropFile, setCropFile] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -51,10 +53,25 @@ const Profile = () => {
       const file = e.target.files[0];
       if (!file.type.startsWith("image/")) {
         toast.error("Please upload an image file");
+        e.target.value = "";
         return;
       }
-      setSelectedFile(file);
+      setCropFile(file);
+      e.target.value = "";
     }
+  };
+
+  const handleCropDone = (croppedFile) => {
+    setSelectedFile(croppedFile);
+    setPreviewUrl(URL.createObjectURL(croppedFile));
+    setCropFile(null);
+  };
+
+  const handleUseOriginalImage = () => {
+    if (!cropFile) return;
+    setSelectedFile(cropFile);
+    setPreviewUrl(URL.createObjectURL(cropFile));
+    setCropFile(null);
   };
 
   const handleSubmit = async (e) => {
@@ -208,6 +225,16 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      <ImageCropModal
+        file={cropFile}
+        title="Crop Profile Image"
+        aspect={1}
+        cropShape="round"
+        onCropDone={handleCropDone}
+        onUseOriginal={handleUseOriginalImage}
+        onCancel={() => setCropFile(null)}
+      />
     </AdminLayout>
   );
 };
