@@ -48,7 +48,7 @@ const AddUser = () => {
                   value={form.name}
                   onChange={handleChange}
                   required
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -62,7 +62,7 @@ const AddUser = () => {
                   value={form.email}
                   onChange={handleChange}
                   required
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -77,7 +77,7 @@ const AddUser = () => {
                   onChange={handleChange}
                   required
                   minLength={6}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -89,7 +89,7 @@ const AddUser = () => {
                   name="role"
                   value={form.role}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="editor">Editor</option>
                   <option value="reporter">Reporter</option>
@@ -101,7 +101,7 @@ const AddUser = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-60"
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60"
                 >
                   {loading ? "Saving..." : "Add User"}
                 </button>

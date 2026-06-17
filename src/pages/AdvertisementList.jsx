@@ -61,7 +61,7 @@ const AdvertisementList = () => {
           <h2 className="text-2xl font-black text-slate-950">Advertisement banners</h2>
           <p className="text-slate-500 font-medium mt-1">Control app banner ads, redirect links, city visibility and feed positions.</p>
         </div>
-        <Link to="/advertisements/add" className="inline-flex items-center justify-center gap-2 bg-cyan-500 text-white px-5 py-3 rounded-2xl font-black hover:bg-cyan-600 shadow-lg shadow-cyan-500/25">
+        <Link to="/advertisements/add" className="inline-flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3 rounded-2xl font-black hover:bg-red-600 shadow-lg shadow-red-500/25">
           <FiPlus /> Add Advertisement
         </Link>
       </div>
@@ -69,13 +69,13 @@ const AdvertisementList = () => {
       {loading ? (
         <p className="text-center text-slate-500 py-10 font-bold">Loading...</p>
       ) : advertisements.length === 0 ? (
-        <div className="bg-white rounded-[1.5rem] border border-cyan-100 p-10 text-center text-slate-500 font-bold">
+        <div className="bg-white rounded-[1.5rem] border border-red-100 p-10 text-center text-slate-500 font-bold">
           No advertisement added yet
         </div>
       ) : (
         <div className="grid gap-5">
           {advertisements.map((item) => (
-            <article key={item._id} className="bg-white/90 backdrop-blur rounded-[1.6rem] shadow-sm border border-cyan-100 p-5 hover:shadow-xl hover:shadow-cyan-100">
+            <article key={item._id} className="bg-white/90 backdrop-blur rounded-[1.6rem] shadow-sm border border-red-100 p-5 hover:shadow-xl hover:shadow-red-100">
               <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_auto] gap-5 items-start">
                 <MediaPreview
                   src={item.bannerImage}
@@ -88,16 +88,16 @@ const AdvertisementList = () => {
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <span className="text-xs px-3 py-1.5 bg-cyan-50 text-cyan-700 rounded-full font-black">
+                    <span className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-full font-black">
                       {item.label || "Advertisement"}
                     </span>
                     <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
                       {item.isEnabled ? "Enabled" : "Disabled"}
                     </span>
-                    <span className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full font-black">
+                    <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews || 4} news
                     </span>
-                    <span className="text-xs px-3 py-1.5 bg-sky-50 text-sky-700 rounded-full font-black">
+                    <span className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-full font-black">
                       {item.viewCount || 0} Views
                     </span>
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
@@ -109,7 +109,7 @@ const AdvertisementList = () => {
                   </div>
 
                   <h3 className="text-xl font-black text-slate-950 mb-2 line-clamp-2">{item.name}</h3>
-                  <a href={item.redirectUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm text-cyan-600 font-bold break-all">
+                  <a href={item.redirectUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm text-red-600 font-bold break-all">
                     {item.redirectUrl} <FiExternalLink />
                   </a>
                 </div>

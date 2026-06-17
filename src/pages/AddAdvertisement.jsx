@@ -108,21 +108,21 @@ const AddAdvertisement = () => {
 
   return (
     <AdminLayout title="Add Advertisement">
-      <div className="bg-white rounded-2xl shadow-sm border border-cyan-100 p-6 max-w-3xl">
+      <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-6 max-w-3xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Name</label>
-            <input name="name" value={form.name} onChange={handleChange} required className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input name="name" value={form.name} onChange={handleChange} required className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Label</label>
-            <input name="label" value={form.label} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input name="label" value={form.label} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Redirect URL</label>
-            <input name="redirectUrl" value={form.redirectUrl} onChange={handleChange} required placeholder="https://example.com" className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input name="redirectUrl" value={form.redirectUrl} onChange={handleChange} required placeholder="https://example.com" className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
           </div>
 
           <div>
@@ -132,7 +132,7 @@ const AddAdvertisement = () => {
               value={form.cities || []}
               onChange={handleChange}
               multiple
-              className="w-full min-h-36 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full min-h-36 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
             >
               {cities.map((city) => (
                 <option key={city._id} value={city._id}>
@@ -145,13 +145,13 @@ const AddAdvertisement = () => {
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Show after how many news?</label>
-            <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
             <p className="text-xs text-slate-500 mt-1">Set to 0 to show at the very top of the feed, or 4 to show after the 4th news card.</p>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Banner Image</label>
-            <input type="file" accept="image/*" onChange={handleFileChange}  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500" />
+            <input type="file" accept="image/*" onChange={handleFileChange}  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
             {preview && (
               <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <MediaPreview src={preview} type="image" name={bannerImage?.name || "Advertisement banner"} showName className="h-72" />
@@ -163,12 +163,12 @@ const AddAdvertisement = () => {
           </div>
 
           <label className="flex items-center gap-2">
-            <input name="isEnabled" type="checkbox" checked={form.isEnabled} onChange={handleChange} className="w-5 h-5 accent-cyan-500" />
+            <input name="isEnabled" type="checkbox" checked={form.isEnabled} onChange={handleChange} className="w-5 h-5 accent-red-500" />
             <span className="text-sm font-semibold text-slate-700">Enable advertisement</span>
           </label>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button type="submit" disabled={loading} className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-60">
+            <button type="submit" disabled={loading} className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60">
               {loading ? "Saving..." : "Add Advertisement"}
             </button>
             <button type="button" onClick={() => navigate("/advertisements")} className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200">

@@ -76,13 +76,13 @@ const Navbar = ({ title, onMenuClick }) => {
           <button
             type="button"
             onClick={onMenuClick}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-cyan-200 hover:text-cyan-600 lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-red-200 hover:text-red-600 lg:hidden"
             aria-label="Open menu"
           >
             <FiMenu className="text-xl" />
           </button>
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-600">Admin Panel</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-red-600">Admin Panel</p>
             <h1 className="truncate text-xl font-black tracking-tight text-slate-950 sm:text-2xl">{title}</h1>
           </div>
         </div>
@@ -101,7 +101,7 @@ const Navbar = ({ title, onMenuClick }) => {
                 <FiX />
               </button>
             )}
-            <button type="submit" className="rounded-xl bg-cyan-500 px-3 py-1.5 text-xs font-black text-white hover:bg-cyan-600">
+            <button type="submit" className="rounded-xl bg-red-500 px-3 py-1.5 text-xs font-black text-white hover:bg-red-600">
               Search
             </button>
           </form>
@@ -109,7 +109,7 @@ const Navbar = ({ title, onMenuClick }) => {
           <button
             type="button"
             onClick={() => navigate("/news")}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-cyan-200 hover:text-cyan-600 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-red-200 hover:text-red-600 md:hidden"
             aria-label="Open news search"
           >
             <FiSearch />
@@ -119,7 +119,7 @@ const Navbar = ({ title, onMenuClick }) => {
             <button
               type="button"
               onClick={handleNotificationClick}
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-100 bg-cyan-50 text-cyan-600 shadow-sm hover:bg-cyan-100"
+              className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-600 shadow-sm hover:bg-red-100"
               aria-label="Open notification summary"
             >
               <FiBell />
@@ -128,7 +128,7 @@ const Navbar = ({ title, onMenuClick }) => {
 
             {notificationOpen && (
               <div className="absolute right-0 mt-3 w-[min(92vw,360px)] overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-2xl shadow-slate-300/50">
-                <div className="border-b border-slate-100 bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
+                <div className="border-b border-slate-100 bg-gradient-to-r from-red-50 to-red-50 p-4">
                   <p className="text-sm font-black text-slate-950">Admin notification summary</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">Quick health check from analytics API.</p>
                 </div>
@@ -174,7 +174,7 @@ const Navbar = ({ title, onMenuClick }) => {
                                 setNotificationOpen(false);
                                 navigate(`/news/edit/${item._id}`);
                               }}
-                              className="w-full rounded-2xl bg-slate-50 p-3 text-left hover:bg-cyan-50"
+                              className="w-full rounded-2xl bg-slate-50 p-3 text-left hover:bg-red-50"
                             >
                               <p className="line-clamp-1 text-sm font-black text-slate-800">{item.title}</p>
                               <p className="mt-1 text-xs font-bold text-slate-500">{Number(item.viewCount || 0).toLocaleString()} views</p>
@@ -190,7 +190,7 @@ const Navbar = ({ title, onMenuClick }) => {
                         setNotificationOpen(false);
                         navigate("/analytics");
                       }}
-                      className="mt-4 w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-black text-white hover:bg-cyan-600"
+                      className="mt-4 w-full rounded-2xl bg-red-500 px-4 py-3 text-sm font-black text-white hover:bg-red-600"
                     >
                       Open analytics
                     </button>
@@ -215,7 +215,7 @@ const Navbar = ({ title, onMenuClick }) => {
             <FiX />
           </button>
         )}
-        <button type="submit" className="rounded-xl bg-cyan-500 px-3 py-1.5 text-xs font-black text-white hover:bg-cyan-600">
+        <button type="submit" className="rounded-xl bg-red-500 px-3 py-1.5 text-xs font-black text-white hover:bg-red-600">
           Go
         </button>
       </form>

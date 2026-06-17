@@ -319,6 +319,7 @@ const NewsList = () => {
                   {getPrimaryMedia(item) ? (
                     <MediaPreview
                       media={getPrimaryMedia(item)}
+                      mediaItems={item.media}
                       compact
                       showName
                       className="h-44 xl:h-40"

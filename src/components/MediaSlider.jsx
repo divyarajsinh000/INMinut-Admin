@@ -113,7 +113,7 @@ const MediaSlider = ({
               key={keyFor(item, index)}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className={`h-2.5 shrink-0 rounded-full transition-all ${index === activeIndex ? "w-8 bg-cyan-500" : "w-2.5 bg-slate-300"}`}
+              className={`h-2.5 shrink-0 rounded-full transition-all ${index === activeIndex ? "w-8 bg-red-500" : "w-2.5 bg-slate-300"}`}
               aria-label={`Open media ${index + 1}`}
             />
           ))}

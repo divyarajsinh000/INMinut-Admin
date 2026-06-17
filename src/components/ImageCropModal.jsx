@@ -183,7 +183,7 @@ const ImageCropModal = ({
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full accent-cyan-500"
+                className="w-full accent-red-500"
               />
             </div>
             <div>
@@ -198,7 +198,7 @@ const ImageCropModal = ({
                 step={1}
                 value={rotation}
                 onChange={(e) => setRotation(Number(e.target.value))}
-                className="w-full accent-cyan-500"
+                className="w-full accent-red-500"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ const ImageCropModal = ({
               type="button"
               onClick={handleCrop}
               disabled={processing}
-              className="rounded-xl bg-cyan-500 px-6 py-3 text-sm font-black text-white hover:bg-cyan-600 disabled:opacity-60"
+              className="rounded-xl bg-red-500 px-6 py-3 text-sm font-black text-white hover:bg-red-600 disabled:opacity-60"
             >
               {processing ? "Cropping..." : "Apply Crop"}
             </button>

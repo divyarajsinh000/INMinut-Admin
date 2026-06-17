@@ -55,7 +55,7 @@ const EmbedList = () => {
           <h2 className="text-2xl font-black text-slate-950">Embed Cards</h2>
           <p className="text-slate-500 font-medium mt-1">Manage external HTML, iframe, social media embeds, custom code cards, heights, and positions.</p>
         </div>
-        <Link to="/embeds/add" className="inline-flex items-center justify-center gap-2 bg-cyan-500 text-white px-5 py-3 rounded-2xl font-black hover:bg-cyan-600 shadow-lg shadow-cyan-500/25">
+        <Link to="/embeds/add" className="inline-flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3 rounded-2xl font-black hover:bg-red-600 shadow-lg shadow-red-500/25">
           <FiPlus /> Add Embed Code
         </Link>
       </div>
@@ -63,15 +63,15 @@ const EmbedList = () => {
       {loading ? (
         <p className="text-center text-slate-500 py-10 font-bold">Loading...</p>
       ) : embeds.length === 0 ? (
-        <div className="bg-white rounded-[1.5rem] border border-cyan-100 p-10 text-center text-slate-500 font-bold">
+        <div className="bg-white rounded-[1.5rem] border border-red-100 p-10 text-center text-slate-500 font-bold">
           No embed cards added yet
         </div>
       ) : (
         <div className="grid gap-5">
           {embeds.map((item) => (
-            <article key={item._id} className="bg-white/90 backdrop-blur rounded-[1.6rem] shadow-sm border border-cyan-100 p-5 hover:shadow-xl hover:shadow-cyan-100">
+            <article key={item._id} className="bg-white/90 backdrop-blur rounded-[1.6rem] shadow-sm border border-red-100 p-5 hover:shadow-xl hover:shadow-red-100">
               <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr_auto] gap-5 items-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-red-600">
                   <FiCode size={32} />
                 </div>
 
@@ -80,13 +80,13 @@ const EmbedList = () => {
                     <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
                       {item.isEnabled ? "Active" : "Inactive"}
                     </span>
-                    <span className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full font-black">
+                    <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews} news
                     </span>
                     <span className="text-xs px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full font-black">
                       Height: {item.height}px
                     </span>
-                    <span className="text-xs px-3 py-1.5 bg-sky-50 text-sky-700 rounded-full font-black">
+                    <span className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-full font-black">
                       {item.viewCount || 0} Views
                     </span>
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">

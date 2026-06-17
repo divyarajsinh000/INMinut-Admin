@@ -25,22 +25,22 @@ const Dashboard = () => {
   useEffect(() => { fetchStats(); }, []);
 
   const cards = [
-    { label: "Total News", value: totalNews, icon: FiFileText, color: "from-cyan-500 to-cyan-600" },
-    { label: "Categories", value: totalCategories, icon: FiTag, color: "from-indigo-500 to-violet-600" },
+    { label: "Total News", value: totalNews, icon: FiFileText, color: "from-red-500 to-red-600" },
+    { label: "Categories", value: totalCategories, icon: FiTag, color: "from-rose-500 to-violet-600" },
     { label: "App Guest Users", value: totalGuestUsers, icon: FiSmartphone, color: "from-emerald-500 to-teal-600" },
   ];
 
   return (
     <AdminLayout title="Dashboard">
       <div className="mb-7 rounded-[2rem] bg-slate-950 p-7 text-white relative overflow-hidden">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-cyan-500/25 blur-3xl" />
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-red-500/25 blur-3xl" />
         <div className="relative z-10 flex items-center justify-between gap-6">
           <div>
-            <p className="text-cyan-300 font-black uppercase tracking-widest text-xs">Overview</p>
+            <p className="text-red-300 font-black uppercase tracking-widest text-xs">Overview</p>
             <h2 className="text-3xl font-black mt-2">Manage city-wise breaking news</h2>
             <p className="text-slate-300 mt-2 max-w-2xl">Track posts, categories and registered app devices from one modern dashboard.</p>
           </div>
-          <div className="hidden md:flex h-16 w-16 rounded-3xl bg-white/10 items-center justify-center text-cyan-300">
+          <div className="hidden md:flex h-16 w-16 rounded-3xl bg-white/10 items-center justify-center text-red-300">
             <FiTrendingUp className="text-3xl" />
           </div>
         </div>
@@ -50,7 +50,7 @@ const Dashboard = () => {
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-white/90 backdrop-blur rounded-[1.5rem] shadow-sm border border-cyan-100 p-6 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-100">
+            <div key={card.label} className="bg-white/90 backdrop-blur rounded-[1.5rem] shadow-sm border border-red-100 p-6 hover:-translate-y-1 hover:shadow-xl hover:shadow-red-100">
               <div className="flex items-center justify-between">
                 <div className={`h-13 w-13 rounded-2xl bg-gradient-to-br ${card.color} text-white flex items-center justify-center p-4 shadow-lg`}>
                   <Icon className="text-2xl" />

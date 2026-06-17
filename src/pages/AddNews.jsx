@@ -257,7 +257,7 @@ const AddNews = () => {
                   name="title"
                   value={form.title}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -271,7 +271,7 @@ const AddNews = () => {
                   value={form.titleLink || ""}
                   onChange={handleChange}
                   placeholder="https://example.com/news-details"
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <p className="mt-1 text-xs font-medium text-slate-400">
                   If link is added, the title becomes clickable. Leave empty to keep title normal.
@@ -295,7 +295,7 @@ const AddNews = () => {
                       name="titleColor"
                       value={form.titleColor || "#111827"}
                       onChange={handleChange}
-                      className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                 </div>
@@ -310,7 +310,7 @@ const AddNews = () => {
                     max="60"
                     value={form.titleFontSize}
                     onChange={handleChange}
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -338,7 +338,7 @@ const AddNews = () => {
                   max="40"
                   value={form.descriptionFontSize}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -350,7 +350,7 @@ const AddNews = () => {
                   name="category"
                   value={form.category}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="">Select category</option>
                   {categories.map((cat) => (
@@ -370,7 +370,7 @@ const AddNews = () => {
                   value={form.cities || []}
                   onChange={handleChange}
                   multiple
-                  className="w-full border rounded-xl px-4 py-3 min-h-[130px] outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 min-h-[130px] outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {cities.map((city) => (
                     <option key={city._id} value={city._id}>
@@ -390,7 +390,7 @@ const AddNews = () => {
                   multiple
                   accept="image/*,video/mp4,video/webm,video/ogg,application/pdf"
                   onChange={handleFileChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
                 
                 {selectedFiles.length > 0 && (
@@ -414,7 +414,7 @@ const AddNews = () => {
                     <input
                       value={tag}
                       onChange={(e) => handleArrayChange("hashtags", i, e.target.value)}
-                      className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="Hashtag"
                     />
                     <button
@@ -429,7 +429,7 @@ const AddNews = () => {
                 <button
                   type="button"
                   onClick={() => addArrayItem("hashtags")}
-                  className="w-full py-2 border-2 border-dashed border-cyan-300 text-cyan-600 rounded-xl hover:border-cyan-400"
+                  className="w-full py-2 border-2 border-dashed border-red-300 text-red-600 rounded-xl hover:border-red-400"
                 >
                   + Add Hashtag
                 </button>
@@ -443,7 +443,7 @@ const AddNews = () => {
                     type="checkbox"
                     checked={form.isBreaking}
                     onChange={handleChange}
-                    className="w-5 h-5 accent-cyan-500"
+                    className="w-5 h-5 accent-red-500"
                   />
                   <label htmlFor="isBreaking" className="text-sm font-semibold text-slate-700">
                     Mark as Breaking News
@@ -462,7 +462,7 @@ const AddNews = () => {
                         onChange={handleChange}
                         maxLength={80}
                         placeholder="Example: Breaking News, Big Update, Alert"
-                        className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                        className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                       />
                       <p className="mt-1 text-xs text-slate-500">This exact text will show in the app instead of fixed Breaking News text.</p>
                     </div>
@@ -486,7 +486,7 @@ const AddNews = () => {
                             value={form.breakingBgColor || '#EF4444'}
                             onChange={handleChange}
                             placeholder="#EF4444"
-                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 text-sm font-medium"
+                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium"
                           />
                         </div>
                       </div>
@@ -509,7 +509,7 @@ const AddNews = () => {
                             value={form.breakingTextColor || '#FFFFFF'}
                             onChange={handleChange}
                             placeholder="#FFFFFF"
-                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 text-sm font-medium"
+                            className="flex-1 border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium"
                           />
                         </div>
                       </div>
@@ -522,7 +522,7 @@ const AddNews = () => {
                         type="checkbox"
                         checked={form.isBreakingBlink}
                         onChange={handleChange}
-                        className="w-5 h-5 accent-cyan-500"
+                        className="w-5 h-5 accent-red-500"
                       />
                       <label htmlFor="isBreakingBlink" className="text-sm font-semibold text-slate-700">
                         Enable Blinking Animation for Badge
@@ -543,7 +543,7 @@ const AddNews = () => {
                     type="checkbox"
                     checked={form.isActive}
                     onChange={handleChange}
-                    className="h-5 w-5 accent-cyan-500"
+                    className="h-5 w-5 accent-red-500"
                   />
                   {form.isActive ? "On" : "Off"}
                 </label>
@@ -558,7 +558,7 @@ const AddNews = () => {
                   type="date"
                   value={form.publishedDate}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -566,7 +566,7 @@ const AddNews = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-60"
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60"
                 >
                   {loading ? "Saving..." : "Add News"}
                 </button>
@@ -665,7 +665,7 @@ const AddNews = () => {
                       href={form.titleLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="mb-2 block font-black leading-tight tracking-tight line-clamp-2 underline decoration-cyan-400 underline-offset-4"
+                      className="mb-2 block font-black leading-tight tracking-tight line-clamp-2 underline decoration-red-400 underline-offset-4"
                       style={{
                         color: form.titleColor || "#111827",
                         fontSize: `${form.titleFontSize || 20}px`,
@@ -725,7 +725,7 @@ const AddNews = () => {
 
                   {/* PDFs Preview */}
                   {pdfs.map((pdf, idx) => (
-                    <div key={`pdf-${idx}`} className="w-full flex items-center gap-3 p-3 bg-sky-50 border border-sky-100 rounded-2xl my-3 text-sky-950 shrink-0">
+                    <div key={`pdf-${idx}`} className="w-full flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-2xl my-3 text-red-950 shrink-0">
                       <div className="w-9 h-9 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

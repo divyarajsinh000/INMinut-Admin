@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiLock, FiMail, FiZap } from "react-icons/fi";
+import { FiLock, FiMail } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
@@ -23,17 +23,18 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-cyan-500/20 blur-3xl" />
-      <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
+      <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-red-500/20 blur-3xl" />
+      <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-red-900/25 blur-3xl" />
 
       <div className="w-full max-w-5xl grid lg:grid-cols-2 rounded-[2rem] overflow-hidden bg-white shadow-2xl relative z-10">
-        <div className="hidden lg:flex bg-gradient-to-br from-cyan-500 to-cyan-700 p-10 text-white flex-col justify-between">
+        <div className="hidden lg:flex bg-gradient-to-br from-red-500 via-red-600 to-red-700 p-10 text-white flex-col justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur">
-              <FiZap className="text-3xl" />
-            </div>
+            <img
+              src="/logo-light.png"
+              alt="INMinut"
+              className="h-12 w-48 rounded-2xl object-contain drop-shadow-sm"
+            />
             <div>
-              <h1 className="text-2xl font-black">BrekingApp</h1>
               <p className="text-white/75 font-semibold">Admin control center</p>
             </div>
           </div>
@@ -48,11 +49,12 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="p-8 sm:p-10 lg:p-12">
           <div className="lg:hidden mb-8 flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-cyan-500 text-white flex items-center justify-center">
-              <FiZap className="text-2xl" />
-            </div>
+            <img
+              src="/logo-light.png"
+              alt="INMinut"
+              className="h-11 w-44 rounded-2xl object-contain"
+            />
             <div>
-              <h1 className="text-xl font-black text-slate-950">BrekingApp</h1>
               <p className="text-sm text-slate-500 font-semibold">Admin Panel</p>
             </div>
           </div>
@@ -63,7 +65,7 @@ const Login = () => {
           <div className="mt-8 space-y-5">
             <div>
               <label className="text-sm font-bold text-slate-700">Email</label>
-              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:ring-2 focus-within:ring-cyan-400">
+              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:ring-2 focus-within:ring-red-400">
                 <FiMail className="text-slate-400" />
                 <input name="email" value={form.email} onChange={handleChange} type="email" required className="w-full bg-transparent outline-none font-semibold text-slate-800" placeholder="admin@example.com" />
               </div>
@@ -71,18 +73,18 @@ const Login = () => {
 
             <div>
               <label className="text-sm font-bold text-slate-700">Password</label>
-              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:ring-2 focus-within:ring-cyan-400">
+              <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:ring-2 focus-within:ring-red-400">
                 <FiLock className="text-slate-400" />
                 <input name="password" value={form.password} onChange={handleChange} type="password" required className="w-full bg-transparent outline-none font-semibold text-slate-800" placeholder="********" />
               </div>
             </div>
 
-            <button disabled={loading} className="w-full bg-cyan-500 text-white py-4 rounded-2xl font-black hover:bg-cyan-600 disabled:opacity-60 shadow-lg shadow-cyan-500/25">
+            <button disabled={loading} className="w-full bg-red-500 text-white py-4 rounded-2xl font-black hover:bg-red-600 disabled:opacity-60 shadow-lg shadow-red-500/25">
               {loading ? "Logging in..." : "Login"}
             </button>
           </div>
 
-          <div className="mt-8 rounded-2xl bg-cyan-50 border border-cyan-100 p-4 text-sm text-slate-600">
+          <div className="mt-8 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-slate-600">
             <p className="font-black text-slate-900">Demo accounts</p>
             <p className="mt-2"><strong>Super Admin:</strong> admin@example.com / admin123</p>
             <p><strong>Editor:</strong> editor@example.com / editor123</p>

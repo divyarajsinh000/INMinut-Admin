@@ -87,9 +87,9 @@ const GuestUsers = () => {
   return (
     <AdminLayout title="App Guest Devices">
       <div className="bg-slate-950 text-white rounded-[2rem] p-6 mb-6 flex items-center justify-between gap-5 overflow-hidden relative">
-        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-500/25 blur-3xl" />
+        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-red-500/25 blur-3xl" />
         <div className="relative z-10 flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-cyan-500 flex items-center justify-center">
+          <div className="h-14 w-14 rounded-2xl bg-red-500 flex items-center justify-center">
             <FiSmartphone className="text-2xl" />
           </div>
           <div>
@@ -97,17 +97,17 @@ const GuestUsers = () => {
             <p className="text-slate-300 mt-1">
               {users.length} guest users · {deviceRows.length} device rows · {enabledDeviceCount} notification-enabled devices.
             </p>
-            <p className="text-cyan-100 text-xs font-bold mt-1">
+            <p className="text-red-100 text-xs font-bold mt-1">
               Open the app once on every phone after updating so each phone sends its own deviceId and Expo token.
             </p>
           </div>
         </div>
-        <button onClick={fetchUsers} className="relative z-10 inline-flex items-center gap-2 px-4 py-3 bg-white text-slate-950 rounded-2xl font-black hover:bg-cyan-50">
+        <button onClick={fetchUsers} className="relative z-10 inline-flex items-center gap-2 px-4 py-3 bg-white text-slate-950 rounded-2xl font-black hover:bg-red-50">
           <FiRefreshCw />Refresh
         </button>
       </div>
 
-      <div className="bg-white/90 rounded-[1.6rem] shadow-sm border border-cyan-100 overflow-hidden">
+      <div className="bg-white/90 rounded-[1.6rem] shadow-sm border border-red-100 overflow-hidden">
         {loading ? (
           <p className="p-6 text-center text-slate-500 font-bold">Loading...</p>
         ) : deviceRows.length === 0 ? (
@@ -115,7 +115,7 @@ const GuestUsers = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-cyan-50 text-slate-700">
+              <thead className="bg-red-50 text-slate-700">
                 <tr>
                   <th className="text-left p-4">Device</th>
                   <th className="text-left p-4">Guest ID</th>
@@ -128,7 +128,7 @@ const GuestUsers = () => {
               </thead>
               <tbody>
                 {deviceRows.map(({ user, device, key }) => (
-                  <tr key={key} className="border-t border-cyan-50 hover:bg-cyan-50/40 align-top">
+                  <tr key={key} className="border-t border-red-50 hover:bg-red-50/40 align-top">
                     <td className="p-4 min-w-[240px]">
                       {device ? (
                         <div>
@@ -136,7 +136,7 @@ const GuestUsers = () => {
                           <p className="text-xs text-slate-500 font-semibold capitalize">
                             {device.platform || "unknown"}{device.appVersion ? ` · v${device.appVersion}` : ""}
                           </p>
-                          <p className="mt-1 text-[11px] font-mono text-cyan-700 break-all">
+                          <p className="mt-1 text-[11px] font-mono text-red-700 break-all">
                             Device ID: {device.deviceId || "not sent by old app"}
                           </p>
                         </div>

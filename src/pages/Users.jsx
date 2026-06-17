@@ -42,7 +42,7 @@ const Users = () => {
           <div className="flex justify-end mb-5">
             <Link
               to="/users/add"
-              className="flex items-center gap-2 bg-cyan-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-cyan-600"
+              className="flex items-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-red-600"
             >
               <FiPlus />
               Add User
@@ -66,7 +66,7 @@ const Users = () => {
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2 ${
                         u.role === "super-admin"
-                          ? "bg-cyan-100 text-cyan-600"
+                          ? "bg-red-100 text-red-600"
                           : u.role === "reporter"
                           ? "bg-amber-100 text-amber-700"
                           : "bg-slate-100 text-slate-600"

@@ -7,7 +7,6 @@ import {
   FiLogOut,
   FiSmartphone,
   FiMapPin,
-  FiZap,
   FiImage,
   FiBarChart2,
   FiX,
@@ -34,7 +33,7 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
   const linkClass = (path) =>
     `group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold tracking-tight ${
       isActive(path)
-        ? "bg-white text-slate-950 shadow-xl shadow-cyan-950/20"
+        ? "bg-white text-slate-950 shadow-xl shadow-red-950/20"
         : "text-slate-300 hover:bg-white/10 hover:text-white"
     }`;
 
@@ -65,16 +64,17 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
         open ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-red-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-28 bottom-20 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
       <div className="relative z-10 flex items-center justify-between border-b border-white/10 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-fuchsia-500 shadow-lg shadow-cyan-500/25">
-            <FiZap className="text-2xl" />
-          </div>
+          <img
+            src="/logo-dark.png"
+            alt="INMinut"
+            className="h-11 w-36 rounded-2xl object-contain"
+          />
           <div>
-            <h1 className="text-xl font-black tracking-tight">BrekingApp</h1>
             <p className="text-xs font-semibold text-slate-400">News control center</p>
           </div>
         </div>
@@ -96,14 +96,14 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
             className="w-12 h-12 rounded-full object-cover border border-white/20 shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-cyan-500/20 border border-white/20 flex items-center justify-center text-cyan-300 shrink-0">
+          <div className="w-12 h-12 rounded-full bg-red-500/20 border border-white/20 flex items-center justify-center text-red-300 shrink-0">
             <FiUser size={20} />
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">Logged in as</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-300">Logged in as</p>
           <p className="truncate font-black text-sm">{user?.name || "Admin"}</p>
-          <span className="mt-1 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-2.5 py-0.5 text-[10px] font-black text-cyan-200 uppercase">
+          <span className="mt-1 inline-flex rounded-full border border-red-300/20 bg-red-400/10 px-2.5 py-0.5 text-[10px] font-black text-red-200 uppercase">
             {user?.role === "super-admin" ? "Super Admin" : user?.role || "Editor"}
           </span>
         </div>

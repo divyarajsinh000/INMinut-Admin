@@ -37,7 +37,7 @@ const shortDate = (date) => {
 };
 
 const EmptyState = ({ text = "No data yet" }) => (
-  <div className="rounded-2xl border border-dashed border-cyan-200 bg-cyan-50/40 p-5 text-center text-sm font-bold text-slate-500">
+  <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/40 p-5 text-center text-sm font-bold text-slate-500">
     {text}
   </div>
 );
@@ -51,8 +51,8 @@ const tabs = [
 
 const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan" }) => {
   const tones = {
-    cyan: "from-cyan-500 to-blue-600 shadow-cyan-500/20",
-    blue: "from-blue-500 to-indigo-600 shadow-blue-500/20",
+    cyan: "from-red-500 to-red-600 shadow-red-500/20",
+    blue: "from-red-500 to-rose-600 shadow-red-500/20",
     green: "from-emerald-500 to-teal-600 shadow-emerald-500/20",
     purple: "from-purple-500 to-fuchsia-600 shadow-purple-500/20",
     orange: "from-orange-500 to-red-600 shadow-orange-500/20",
@@ -62,7 +62,7 @@ const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan" }) => {
   };
 
   return (
-    <div className="min-w-0 rounded-[1.3rem] border border-cyan-100 bg-white p-4 shadow-sm">
+    <div className="min-w-0 rounded-[1.3rem] border border-red-100 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 break-words">{label}</p>
@@ -78,7 +78,7 @@ const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan" }) => {
 };
 
 const ChartCard = ({ title, subtitle, children, className = "" }) => (
-  <section className={`min-w-0 overflow-hidden rounded-[1.5rem] border border-cyan-100 bg-white p-4 sm:p-5 shadow-sm ${className}`}>
+  <section className={`min-w-0 overflow-hidden rounded-[1.5rem] border border-red-100 bg-white p-4 sm:p-5 shadow-sm ${className}`}>
     <div className="mb-5 min-w-0">
       <h3 className="break-words text-base sm:text-lg font-black text-slate-950">{title}</h3>
       {subtitle && <p className="mt-1 break-words text-xs sm:text-sm font-bold text-slate-500">{subtitle}</p>}
@@ -88,9 +88,9 @@ const ChartCard = ({ title, subtitle, children, className = "" }) => (
 );
 
 const RankingList = ({ title, icon: Icon, items = [], valueKey = "views", valueLabel = "Views", getName, getMeta }) => (
-  <section className="min-w-0 overflow-hidden rounded-[1.5rem] border border-cyan-100 bg-white p-4 sm:p-5 shadow-sm">
+  <section className="min-w-0 overflow-hidden rounded-[1.5rem] border border-red-100 bg-white p-4 sm:p-5 shadow-sm">
     <div className="mb-4 flex min-w-0 items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
         <Icon />
       </div>
       <h3 className="min-w-0 break-words font-black text-slate-950">{title}</h3>
@@ -101,7 +101,7 @@ const RankingList = ({ title, icon: Icon, items = [], valueKey = "views", valueL
     ) : (
       <div className="space-y-3">
         {items.map((item, index) => (
-          <div key={item._id || item.hashtag || item.title || item.name || index} className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-100 p-3 hover:bg-cyan-50/40">
+          <div key={item._id || item.hashtag || item.title || item.name || index} className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-100 p-3 hover:bg-red-50/40">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-xs font-black text-white">#{item.rank || index + 1}</span>
               <div className="min-w-0">
@@ -138,7 +138,7 @@ const BarChart = ({ items = [], labelKey = "name", valueKey = "views", suffix = 
               <p className="shrink-0 text-sm font-black text-slate-950">{compactNumber(value)}{suffix}</p>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600" style={{ width: `${width}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600" style={{ width: `${width}%` }} />
             </div>
           </div>
         );
@@ -163,7 +163,7 @@ const GroupedTrendChart = ({ items = [] }) => {
             const sharesHeight = Math.max((Number(item.shares || 0) / max) * 100, item.shares ? 7 : 2);
             return (
               <div key={item.date} className="group relative flex h-full flex-1 items-end justify-center gap-1">
-                <div className="w-2 rounded-t-lg bg-blue-500" style={{ height: `${viewsHeight}%` }} />
+                <div className="w-2 rounded-t-lg bg-red-500" style={{ height: `${viewsHeight}%` }} />
                 <div className="w-2 rounded-t-lg bg-emerald-500" style={{ height: `${savesHeight}%` }} />
                 <div className="w-2 rounded-t-lg bg-purple-500" style={{ height: `${sharesHeight}%` }} />
                 <div className="absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white shadow-xl group-hover:block">
@@ -175,7 +175,7 @@ const GroupedTrendChart = ({ items = [] }) => {
         </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-black text-slate-500">
-        <span className="inline-flex items-center gap-2"><i className="h-3 w-3 rounded-full bg-blue-500" /> Views</span>
+        <span className="inline-flex items-center gap-2"><i className="h-3 w-3 rounded-full bg-red-500" /> Views</span>
         <span className="inline-flex items-center gap-2"><i className="h-3 w-3 rounded-full bg-emerald-500" /> Saves</span>
         <span className="inline-flex items-center gap-2"><i className="h-3 w-3 rounded-full bg-purple-500" /> Shares</span>
       </div>
@@ -198,7 +198,7 @@ const SingleTrendChart = ({ items = [], valueKey = "news", label = "News" }) => 
             const height = Math.max((value / max) * 100, value ? 8 : 2);
             return (
               <div key={item.date} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2">
-                <div className="w-full max-w-7 rounded-t-xl bg-gradient-to-t from-cyan-500 to-blue-500" style={{ height: `${height}%` }} />
+                <div className="w-full max-w-7 rounded-t-xl bg-gradient-to-t from-red-500 to-red-500" style={{ height: `${height}%` }} />
                 <span className="hidden text-[10px] font-bold text-slate-400 sm:block">{shortDate(item.date)}</span>
                 <div className="absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white shadow-xl group-hover:block">
                   {shortDate(item.date)} • {number(value)} {label}
@@ -220,7 +220,7 @@ const SplitChart = ({ items = [], labelKey = "platform", valueKey = "users" }) =
 
   return (
     <div className="min-w-0 grid grid-cols-1 gap-5 md:grid-cols-[150px_minmax(0,1fr)] md:items-center">
-      <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-slate-900 shadow-inner">
+      <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-red-400 via-red-500 to-slate-900 shadow-inner">
         <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
           <p className="text-xs font-black uppercase text-slate-400">Total</p>
           <p className="text-xl font-black text-slate-950">{number(total)}</p>
@@ -237,7 +237,7 @@ const SplitChart = ({ items = [], labelKey = "platform", valueKey = "users" }) =
                 <span className="shrink-0 text-sm font-black text-slate-950">{number(value)} • {percent}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-cyan-500" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-red-500" style={{ width: `${percent}%` }} />
               </div>
             </div>
           );
@@ -251,7 +251,7 @@ const Header = ({ activeTab, setActiveTab, onRefresh }) => (
   <div className="mb-6 min-w-0">
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div className="min-w-0">
-        <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Admin Analytics</p>
+        <p className="text-xs font-black uppercase tracking-widest text-red-600">Admin Analytics</p>
         <h2 className="mt-1 break-words text-2xl font-black text-slate-950 sm:text-3xl">Clean chart and number analytics</h2>
         <p className="mt-1 max-w-3xl break-words text-sm font-medium leading-6 text-slate-500">
           Data is separated into four simple sections, so the screen stays responsive and easy to read.
@@ -259,7 +259,7 @@ const Header = ({ activeTab, setActiveTab, onRefresh }) => (
       </div>
       <button
         onClick={onRefresh}
-        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 font-black text-white shadow-lg shadow-cyan-500/25 hover:bg-cyan-600 sm:w-auto"
+        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 py-3 font-black text-white shadow-lg shadow-red-500/25 hover:bg-red-600 sm:w-auto"
       >
         <FiRefreshCw /> Refresh
       </button>
@@ -275,8 +275,8 @@ const Header = ({ activeTab, setActiveTab, onRefresh }) => (
             onClick={() => setActiveTab(tab.key)}
             className={`min-w-0 rounded-2xl border px-3 py-3 text-left transition ${
               active
-                ? "border-cyan-500 bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
-                : "border-cyan-100 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50"
+                ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/20"
+                : "border-red-100 bg-white text-slate-700 hover:border-red-300 hover:bg-red-50"
             }`}
           >
             <span className="flex min-w-0 items-center gap-2">
@@ -383,7 +383,7 @@ const Analytics = () => {
         <Header activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={fetchAnalytics} />
 
         {loading ? (
-          <div className="rounded-[1.5rem] border border-cyan-100 bg-white p-10 text-center font-bold text-slate-500 shadow-sm">
+          <div className="rounded-[1.5rem] border border-red-100 bg-white p-10 text-center font-bold text-slate-500 shadow-sm">
             Loading analytics...
           </div>
         ) : (
@@ -497,16 +497,16 @@ const Analytics = () => {
                 <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
                   <RankingList title="Reporter Performance" icon={FiTrendingUp} items={data?.reporterPerformance} valueKey="views" valueLabel="Views" getName={(item) => item.name || "Reporter"} getMeta={(item) => `${number(item.newsCount)} news • ${number(item.saves)} saves • ${number(item.shares)} shares`} />
                   <section className="min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950 p-5 text-white shadow-sm relative">
-                    <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" />
+                    <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-red-500/20 blur-3xl" />
                     <div className="relative z-10 min-w-0">
-                      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-cyan-300">
+                      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-red-300">
                         <FiTrendingUp />
                       </div>
                       <h3 className="break-words text-xl font-black">How to use this data?</h3>
                       <p className="mt-2 break-words text-sm font-medium leading-7 text-slate-300">
                         Use category and city tabs to decide what to publish next. Use today's analytics for daily performance, and overall analytics for platform, media and reporter decisions.
                       </p>
-                      <Link to="/news" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 font-black text-white hover:bg-cyan-600 sm:w-auto">
+                      <Link to="/news" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 py-3 font-black text-white hover:bg-red-600 sm:w-auto">
                         <FiBarChart2 /> Open News Ranking
                       </Link>
                     </div>

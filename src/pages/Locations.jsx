@@ -91,8 +91,8 @@ const Locations = () => {
     }
   };
 
-  const cardClass = "bg-white/90 rounded-[1.5rem] shadow-sm border border-cyan-100 p-5";
-  const inputClass = "w-full border border-cyan-100 bg-cyan-50/40 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400 font-semibold text-slate-800";
+  const cardClass = "bg-white/90 rounded-[1.5rem] shadow-sm border border-red-100 p-5";
+  const inputClass = "w-full border border-red-100 bg-red-50/40 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-400 font-semibold text-slate-800";
 
   return (
     <AdminLayout title="Locations">
@@ -102,7 +102,7 @@ const Locations = () => {
             <h2 className="text-2xl font-black text-slate-950">Country, state and city master</h2>
             <p className="text-slate-500 font-medium mt-1">These cities power mobile preferences, news targeting and notifications.</p>
           </div>
-          <button onClick={fetchLocations} className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-cyan-500 text-white rounded-2xl font-black hover:bg-cyan-600 shadow-lg shadow-cyan-500/25">
+          <button onClick={fetchLocations} className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-500 text-white rounded-2xl font-black hover:bg-red-600 shadow-lg shadow-red-500/25">
             <FiRefreshCw /> Refresh
           </button>
         </div>
@@ -113,7 +113,7 @@ const Locations = () => {
             <div className="space-y-3">
               <input required placeholder="Country name" value={countryForm.name} onChange={(e) => setCountryForm((p) => ({ ...p, name: e.target.value }))} className={inputClass} />
               <input placeholder="Code, e.g. IN" value={countryForm.code} onChange={(e) => setCountryForm((p) => ({ ...p, code: e.target.value }))} className={inputClass} />
-              <button className="w-full bg-cyan-500 text-white py-3 rounded-2xl font-black hover:bg-cyan-600">Add Country</button>
+              <button className="w-full bg-red-500 text-white py-3 rounded-2xl font-black hover:bg-red-600">Add Country</button>
             </div>
           </form>
 
@@ -125,7 +125,7 @@ const Locations = () => {
                 {countries.map((country) => <option key={country._id} value={country._id}>{country.name}</option>)}
               </select>
               <input required placeholder="State name" value={stateForm.name} onChange={(e) => setStateForm((p) => ({ ...p, name: e.target.value }))} className={inputClass} />
-              <button className="w-full bg-cyan-500 text-white py-3 rounded-2xl font-black hover:bg-cyan-600">Add State</button>
+              <button className="w-full bg-red-500 text-white py-3 rounded-2xl font-black hover:bg-red-600">Add State</button>
             </div>
           </form>
 
@@ -141,7 +141,7 @@ const Locations = () => {
                 {filteredStatesForCity.map((state) => <option key={state._id} value={state._id}>{state.name}</option>)}
               </select>
               <input required placeholder="City name" value={cityForm.name} onChange={(e) => setCityForm((p) => ({ ...p, name: e.target.value }))} className={inputClass} />
-              <button className="w-full bg-cyan-500 text-white py-3 rounded-2xl font-black hover:bg-cyan-600">Add City</button>
+              <button className="w-full bg-red-500 text-white py-3 rounded-2xl font-black hover:bg-red-600">Add City</button>
             </div>
           </form>
         </div>
@@ -157,14 +157,14 @@ const Locations = () => {
 };
 
 const ListCard = ({ title, loading, items, onDelete, render }) => (
-  <div className="bg-white/90 rounded-[1.5rem] shadow-sm border border-cyan-100 overflow-hidden">
-    <div className="p-5 border-b border-cyan-100 bg-cyan-50/40">
+  <div className="bg-white/90 rounded-[1.5rem] shadow-sm border border-red-100 overflow-hidden">
+    <div className="p-5 border-b border-red-100 bg-red-50/40">
       <h2 className="text-lg font-black text-slate-950">{title}</h2>
     </div>
     {loading ? <p className="p-5 text-slate-500">Loading...</p> : items.length === 0 ? <p className="p-5 text-slate-500">No records</p> : (
-      <div className="divide-y divide-cyan-50 max-h-[480px] overflow-y-auto">
+      <div className="divide-y divide-red-50 max-h-[480px] overflow-y-auto">
         {items.map((item) => (
-          <div key={item._id} className="p-4 flex items-center justify-between hover:bg-cyan-50/40">
+          <div key={item._id} className="p-4 flex items-center justify-between hover:bg-red-50/40">
             <div className="text-slate-800">{render(item)}</div>
             <button onClick={() => onDelete(item._id)} className="p-2.5 bg-red-50 rounded-xl hover:bg-red-100"><FiTrash2 className="text-red-600" /></button>
           </div>

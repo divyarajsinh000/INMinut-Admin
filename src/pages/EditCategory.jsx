@@ -73,7 +73,7 @@ const EditCategory = () => {
                   value={form.name}
                   onChange={handleChange}
                   required
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -97,7 +97,7 @@ const EditCategory = () => {
                         backgroundColor: e.target.value,
                       }))
                     }
-                    className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -122,7 +122,7 @@ const EditCategory = () => {
                         textColor: e.target.value,
                       }))
                     }
-                    className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -131,7 +131,7 @@ const EditCategory = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-cyan-500 text-white py-3 rounded-xl font-bold hover:bg-cyan-600 disabled:opacity-60"
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60"
                 >
                   {loading ? "Updating..." : "Update Category"}
                 </button>

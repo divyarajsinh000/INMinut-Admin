@@ -140,7 +140,7 @@ const Profile = () => {
               />
             </div>
             {selectedFile && (
-              <p className="mt-3 text-xs font-bold text-cyan-600 bg-cyan-50 px-3 py-1 rounded-full">
+              <p className="mt-3 text-xs font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">
                 New image selected
               </p>
             )}
@@ -164,7 +164,7 @@ const Profile = () => {
                     value={form.name}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500 font-medium text-slate-800"
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500 font-medium text-slate-800"
                   />
                 </div>
 
@@ -179,7 +179,7 @@ const Profile = () => {
                     value={form.email}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500 font-medium text-slate-800"
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500 font-medium text-slate-800"
                   />
                 </div>
               </div>
@@ -207,7 +207,7 @@ const Profile = () => {
                     value={form.password}
                     onChange={handleChange}
                     minLength={6}
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -216,7 +216,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-cyan-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-cyan-600 transition disabled:opacity-60 shrink-0"
+                  className="bg-red-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-600 transition disabled:opacity-60 shrink-0"
                 >
                   {loading ? "Saving Changes..." : "Save Profile Changes"}
                 </button>

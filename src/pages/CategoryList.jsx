@@ -40,7 +40,7 @@ const CategoryList = () => {
           <div className="flex justify-end mb-5">
             <Link
               to="/categories/add"
-              className="flex items-center gap-2 bg-cyan-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-cyan-600"
+              className="flex items-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-red-600"
             >
               <FiPlus />
               Add Category
