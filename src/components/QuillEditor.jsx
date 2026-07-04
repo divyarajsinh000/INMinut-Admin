@@ -1,3 +1,4 @@
+import { sanitizeRichText } from "../utils/sanitizeHtml";
 import { useEffect, useRef } from "react";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
@@ -35,7 +36,7 @@ const QuillEditor = ({ value, onChange }) => {
     quillRef.current = quill;
 
     if (value) {
-      quill.clipboard.dangerouslyPasteHTML(value);
+      quill.clipboard.dangerouslyPasteHTML(sanitizeRichText(value));
     }
 
     const handleTextChange = () => {
@@ -61,7 +62,7 @@ const QuillEditor = ({ value, onChange }) => {
       const currentHtml = quillRef.current.root.innerHTML;
       const normalizedValue = value || "";
       if (normalizedValue !== currentHtml && normalizedValue !== "" && normalizedValue !== "<p><br></p>") {
-        quillRef.current.clipboard.dangerouslyPasteHTML(normalizedValue);
+        quillRef.current.clipboard.dangerouslyPasteHTML(sanitizeRichText(normalizedValue));
       }
     }
   }, [value]);

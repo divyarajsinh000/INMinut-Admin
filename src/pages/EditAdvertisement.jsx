@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../config/env";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
@@ -6,7 +7,7 @@ import { toast } from "react-toastify";
 import MediaPreview from "../components/MediaPreview";
 import ImageCropModal from "../components/ImageCropModal";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+const API_BASE_URL = API_ORIGIN;
 
 const getImageUrl = (url) => {
   if (!url) return "";

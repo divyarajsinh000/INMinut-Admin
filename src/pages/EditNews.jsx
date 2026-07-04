@@ -1,3 +1,4 @@
+import { sanitizeRichText } from "../utils/sanitizeHtml";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
@@ -782,7 +783,7 @@ const EditNews = () => {
                         lineHeight: 1.45,
                       }}
                       dangerouslySetInnerHTML={{
-                        __html: form.description || "<p>News description preview will show here...</p>",
+                        __html: sanitizeRichText(form.description || "<p>News description preview will show here...</p>"),
                       }}
                     />
                     {form.description && (

@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../config/env";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -13,7 +14,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+const API_BASE_URL = API_ORIGIN;
 
 export const getFullMediaUrl = (url) => {
   if (!url) return "";
