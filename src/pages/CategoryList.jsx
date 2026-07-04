@@ -8,6 +8,7 @@ import { FiPlus, FiEdit, FiTrash2 } from "react-icons/fi";
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [draggedIdx, setDraggedIdx] = useState(null);
 
   const fetchCategories = async () => {
     try {
@@ -35,6 +36,37 @@ const CategoryList = () => {
     fetchCategories();
   }, []);
 
+  const handleDragStart = (e, index) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e, targetIdx) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === targetIdx) {
+      setDraggedIdx(null);
+      return;
+    }
+
+    const newCategories = [...categories];
+    const draggedItem = newCategories.splice(draggedIdx, 1)[0];
+    newCategories.splice(targetIdx, 0, draggedItem);
+
+    setCategories(newCategories);
+    setDraggedIdx(null);
+
+    try {
+      const orderedIds = newCategories.map(cat => cat._id);
+      await axiosInstance.put("/categories/reorder", { orderedIds });
+    } catch (error) {
+      fetchCategories(); // revert on fail
+    }
+  };
+
   return (
     <AdminLayout title="Categories">
           <div className="flex justify-end mb-5">
@@ -53,12 +85,16 @@ const CategoryList = () => {
             <p className="text-center text-slate-500">No categories yet</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {categories.map((cat) => (
+              {categories.map((cat, index) => (
                 <div
                   key={cat._id}
-                  className="bg-white rounded-2xl shadow-sm border p-5"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`bg-white rounded-2xl shadow-sm border p-5 cursor-move transition-transform ${draggedIdx === index ? 'opacity-50 scale-95' : ''}`}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start pointer-events-none">
                     <div>
                       <div
                         className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
@@ -73,7 +109,7 @@ const CategoryList = () => {
                         {cat.name}
                       </h3>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 pointer-events-auto">
                       <Link
                         to={`/categories/edit/${cat._id}`}
                         className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"

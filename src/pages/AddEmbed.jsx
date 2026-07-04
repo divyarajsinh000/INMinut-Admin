@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
@@ -13,7 +13,22 @@ const AddEmbed = () => {
     height: 250,
     positionAfterNews: 5,
     isEnabled: true,
+    categories: [],
   });
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axiosInstance.get("/categories");
+        setCategories(res.data.data);
+      } catch (error) {
+        console.error("Failed to load categories");
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -39,6 +54,7 @@ const AddEmbed = () => {
         height: Number(form.height),
         positionAfterNews: Number(form.positionAfterNews),
         isEnabled: form.isEnabled,
+        categories: JSON.stringify(form.categories || []),
       });
 
       toast.success("Embed card added successfully");
@@ -75,10 +91,10 @@ const AddEmbed = () => {
               onChange={handleChange}
               required
               rows="6"
-              placeholder="Paste <iframe>, <script> block, or HTML here..."
+              placeholder="Paste <iframe>, <script> block, HTML, or a direct URL link here..."
               className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500 font-mono text-sm"
             />
-            <p className="text-xs text-slate-500 mt-1">Ensure the code contains correct responsive tags or matches the card size.</p>
+            <p className="text-xs text-slate-500 mt-1">Ensure the code contains correct responsive tags, or paste a direct URL (e.g., https://youtube.com/...).</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -111,16 +127,43 @@ const AddEmbed = () => {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 pt-2">
-            <input
-              name="isEnabled"
-              type="checkbox"
-              checked={form.isEnabled}
-              onChange={handleChange}
-              className="w-5 h-5 accent-red-500"
-            />
-            <span className="text-sm font-semibold text-slate-700">Enable embed card immediately</span>
-          </label>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Target Categories</label>
+            <select
+              name="categories"
+              value={form.categories || []}
+              onChange={(e) => {
+                const values = Array.from(e.target.selectedOptions).map((opt) => opt.value);
+                setForm((prev) => ({ ...prev, categories: values }));
+              }}
+              multiple
+              className="w-full border rounded-xl px-4 py-3 min-h-[130px] outline-none focus:ring-2 focus:ring-red-500"
+            >
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-1">Hold Ctrl (or Cmd) to select multiple. Leave empty to show in all categories.</p>
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+            <div>
+              <p className="font-bold text-slate-800">Display Embed In App</p>
+              <p className="text-xs text-slate-500">Turn off to save embed now and show it later.</p>
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
+              <input
+                name="isEnabled"
+                type="checkbox"
+                checked={form.isEnabled}
+                onChange={handleChange}
+                className="h-5 w-5 accent-red-500"
+              />
+              {form.isEnabled ? "On" : "Off"}
+            </label>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
             <button

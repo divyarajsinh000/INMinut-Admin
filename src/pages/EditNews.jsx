@@ -37,6 +37,7 @@ const EditNews = () => {
     breakingTextColor: "#FFFFFF",
     isBreakingBlink: false,
     isActive: true,
+    hideReporter: false,
     publishedDate: new Date().toISOString().split("T")[0],
     cities: [],
   });
@@ -126,6 +127,7 @@ const EditNews = () => {
         breakingTextColor: news.breakingTextColor || "#FFFFFF",
         isBreakingBlink: !!news.isBreakingBlink,
         isActive: news.isActive !== false,
+        hideReporter: !!news.hideReporter,
         publishedDate: new Date(news.publishedDate).toISOString().split("T")[0],
         hashtags: news.hashtags.length > 0 ? news.hashtags : [""],
         cities: news.cities?.map((city) => city._id) || [],
@@ -282,6 +284,7 @@ const EditNews = () => {
       formData.append('breakingTextColor', form.breakingTextColor || '#FFFFFF');
       formData.append('isBreakingBlink', form.isBreakingBlink);
       formData.append('isActive', form.isActive);
+      formData.append('hideReporter', form.hideReporter);
       formData.append('publishedDate', form.publishedDate);
       formData.append('cities', JSON.stringify(form.cities || []));
       formData.append('mediaToKeep', JSON.stringify(mediaToKeep));
@@ -638,6 +641,23 @@ const EditNews = () => {
                 </label>
               </div>
 
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+                <div>
+                  <p className="font-bold text-slate-800">Hide Reporter Info</p>
+                  <p className="text-xs text-slate-500">Turn on to hide the reporter name and image in the app.</p>
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
+                  <input
+                    name="hideReporter"
+                    type="checkbox"
+                    checked={form.hideReporter}
+                    onChange={handleChange}
+                    className="h-5 w-5 accent-red-500"
+                  />
+                  {form.hideReporter ? "Hidden" : "Visible"}
+                </label>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   Published Date
@@ -834,7 +854,7 @@ const EditNews = () => {
               <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
                 <div className="flex items-center justify-between">
                   {/* Reporter Info */}
-                  {(form.reporter?.name?.trim() || form.reporter?.avatar?.trim()) ? (
+                  {!form.hideReporter && (form.reporter?.name?.trim() || form.reporter?.avatar?.trim()) ? (
                     <div className="flex items-center gap-2 max-w-[60%]">
                       {form.reporter?.avatar?.trim() && (
                         <img
@@ -879,7 +899,7 @@ const EditNews = () => {
       <ImageCropModal
         file={cropFile}
         title="Crop News Image"
-        aspect={16 / 9}
+        aspect={undefined}
         onCropDone={handleCropDone}
         onUseOriginal={handleUseOriginalImage}
         onCancel={handleCancelCropImage}

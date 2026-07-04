@@ -20,6 +20,7 @@ import EmbedList from "./pages/EmbedList";
 import AddEmbed from "./pages/AddEmbed";
 import EditEmbed from "./pages/EditEmbed";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -211,6 +212,15 @@ function App() {
             element={
               <ProtectedRoute roles={["super-admin"]}>
                 <EditEmbed />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute roles={["super-admin"]}>
+                <Settings />
               </ProtectedRoute>
             }
           />

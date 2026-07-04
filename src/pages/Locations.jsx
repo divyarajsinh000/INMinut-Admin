@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
-import { FiTrash2, FiRefreshCw } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiMenu } from "react-icons/fi";
 
 const emptyCountry = { name: "", code: "" };
 const emptyState = { name: "", country: "" };
@@ -91,6 +91,16 @@ const Locations = () => {
     }
   };
 
+  const reorderItems = async (type, orderedIds) => {
+    try {
+      await axiosInstance.put(`/locations/${type}s/reorder`, { orderedIds });
+      toast.success(`${type} order updated`);
+    } catch (error) {
+      toast.error(`Failed to reorder ${type}s`);
+      fetchLocations();
+    }
+  };
+
   const cardClass = "bg-white/90 rounded-[1.5rem] shadow-sm border border-red-100 p-5";
   const inputClass = "w-full border border-red-100 bg-red-50/40 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-400 font-semibold text-slate-800";
 
@@ -147,31 +157,72 @@ const Locations = () => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          <ListCard title="Countries" loading={loading} items={countries} onDelete={(id) => deleteItem("countrie", id)} render={(item) => <><b>{item.name}</b><span className="text-xs text-slate-500 ml-2">{item.code}</span></>} />
-          <ListCard title="States" loading={loading} items={states} onDelete={(id) => deleteItem("state", id)} render={(item) => <><b>{item.name}</b><p className="text-xs text-slate-500">{item.country?.name}</p></>} />
-          <ListCard title="Cities" loading={loading} items={cities} onDelete={(id) => deleteItem("citie", id)} render={(item) => <><b>{item.name}</b><p className="text-xs text-slate-500">{item.state?.name}, {item.country?.name}</p></>} />
+          <ListCard title="Countries" loading={loading} items={countries} setItems={setCountries} onDelete={(id) => deleteItem("countrie", id)} onReorder={(ids) => reorderItems("countrie", ids)} render={(item) => <><b>{item.name}</b><span className="text-xs text-slate-500 ml-2">{item.code}</span></>} />
+          <ListCard title="States" loading={loading} items={states} setItems={setStates} onDelete={(id) => deleteItem("state", id)} onReorder={(ids) => reorderItems("state", ids)} render={(item) => <><b>{item.name}</b><p className="text-xs text-slate-500">{item.country?.name}</p></>} />
+          <ListCard title="Cities" loading={loading} items={cities} setItems={setCities} onDelete={(id) => deleteItem("citie", id)} onReorder={(ids) => reorderItems("citie", ids)} render={(item) => <><b>{item.name}</b><p className="text-xs text-slate-500">{item.state?.name}, {item.country?.name}</p></>} />
         </div>
       </main>
     </AdminLayout>
   );
 };
 
-const ListCard = ({ title, loading, items, onDelete, render }) => (
-  <div className="bg-white/90 rounded-[1.5rem] shadow-sm border border-red-100 overflow-hidden">
-    <div className="p-5 border-b border-red-100 bg-red-50/40">
-      <h2 className="text-lg font-black text-slate-950">{title}</h2>
-    </div>
-    {loading ? <p className="p-5 text-slate-500">Loading...</p> : items.length === 0 ? <p className="p-5 text-slate-500">No records</p> : (
-      <div className="divide-y divide-red-50 max-h-[480px] overflow-y-auto">
-        {items.map((item) => (
-          <div key={item._id} className="p-4 flex items-center justify-between hover:bg-red-50/40">
-            <div className="text-slate-800">{render(item)}</div>
-            <button onClick={() => onDelete(item._id)} className="p-2.5 bg-red-50 rounded-xl hover:bg-red-100"><FiTrash2 className="text-red-600" /></button>
-          </div>
-        ))}
+const ListCard = ({ title, loading, items, setItems, onDelete, onReorder, render }) => {
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index);
+    setTimeout(() => { e.target.classList.add("opacity-50"); }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.classList.remove("opacity-50");
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if (sourceIndex === targetIndex || isNaN(sourceIndex)) return;
+
+    const newItems = [...items];
+    const [movedItem] = newItems.splice(sourceIndex, 1);
+    newItems.splice(targetIndex, 0, movedItem);
+
+    setItems(newItems);
+    onReorder(newItems.map((item) => item._id));
+  };
+
+  return (
+    <div className="bg-white/90 rounded-[1.5rem] shadow-sm border border-red-100 overflow-hidden flex flex-col h-[560px]">
+      <div className="p-5 border-b border-red-100 bg-red-50/40 shrink-0">
+        <h2 className="text-lg font-black text-slate-950">{title}</h2>
       </div>
-    )}
-  </div>
-);
+      {loading ? <p className="p-5 text-slate-500">Loading...</p> : items.length === 0 ? <p className="p-5 text-slate-500">No records</p> : (
+        <div className="divide-y divide-red-50 overflow-y-auto flex-1 custom-scrollbar">
+          {items.map((item, index) => (
+            <div 
+              key={item._id} 
+              className="p-4 flex items-center gap-3 hover:bg-red-50/40 bg-white"
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+            >
+              <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 p-2 -ml-2">
+                <FiMenu />
+              </div>
+              <div className="text-slate-800 flex-1 min-w-0">{render(item)}</div>
+              <button onClick={() => onDelete(item._id)} className="p-2.5 bg-red-50 rounded-xl hover:bg-red-100 shrink-0"><FiTrash2 className="text-red-600" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Locations;

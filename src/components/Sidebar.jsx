@@ -12,6 +12,7 @@ import {
   FiX,
   FiUser,
   FiCode,
+  FiSettings,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { getFullMediaUrl } from "../components/MediaPreview";
@@ -56,6 +57,7 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
     { to: "/guest-users", icon: FiSmartphone, label: "App Users" },
     { to: "/users", icon: FiUsers, label: "Admin Users" },
     { to: "/embeds", icon: FiCode, label: "Embed Codes" },
+    { to: "/settings", icon: FiSettings, label: "Settings" },
   ];
 
   return (

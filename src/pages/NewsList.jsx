@@ -18,6 +18,7 @@ import {
   FiX,
   FiPower,
   FiExternalLink,
+  FiHeart,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import MediaPreview from "../components/MediaPreview";
@@ -396,6 +397,9 @@ const NewsList = () => {
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">
                         <FiBookmark /> {Number(item.saveCount || 0).toLocaleString()} Saves
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-black text-red-700">
+                        <FiHeart /> {Number(item.likeCount || 0).toLocaleString()} Likes
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1.5 text-xs font-black text-purple-700">
                         <FiShare2 /> {Number(item.shareCount || 0).toLocaleString()} Shares

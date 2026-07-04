@@ -88,7 +88,7 @@ const getCroppedImageFile = async (imageSrc, cropPixels, rotation, sourceFile) =
 const ImageCropModal = ({
   file,
   title = "Crop Image",
-  aspect = 16 / 9,
+  aspect: initialAspect = 16 / 9,
   cropShape = "rect",
   onCropDone,
   onUseOriginal,
@@ -99,6 +99,14 @@ const ImageCropModal = ({
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [currentAspect, setCurrentAspect] = useState(initialAspect);
+
+  const presetAspects = [
+    { label: "16:9", value: 16 / 9 },
+    { label: "9:16", value: 9 / 16 },
+    { label: "1:1", value: 1 },
+    { label: "Free", value: undefined },
+  ];
 
   const imageUrl = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
 
@@ -107,7 +115,8 @@ const ImageCropModal = ({
     setZoom(1);
     setRotation(0);
     setCroppedAreaPixels(null);
-  }, [file]);
+    setCurrentAspect(initialAspect);
+  }, [file, initialAspect]);
 
   useEffect(() => {
     return () => {
@@ -159,7 +168,7 @@ const ImageCropModal = ({
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={aspect}
+            aspect={currentAspect}
             cropShape={cropShape}
             showGrid
             onCropChange={setCrop}
@@ -170,6 +179,23 @@ const ImageCropModal = ({
         </div>
 
         <div className="space-y-4 border-t border-slate-200 p-5">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {presetAspects.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setCurrentAspect(preset.value)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+                  currentAspect === preset.value
+                    ? "bg-red-500 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div className="mb-1 flex items-center justify-between text-xs font-black uppercase tracking-wide text-slate-500">

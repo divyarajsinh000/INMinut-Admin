@@ -19,7 +19,7 @@ const AdvertisementList = () => {
 
   const fetchAdvertisements = async () => {
     try {
-      const res = await axiosInstance.get("/advertisements");
+      const res = await axiosInstance.get("/advertisements?sort=recent");
       setAdvertisements(res.data.data || []);
     } catch (error) {
       toast.error("Failed to load advertisements");
@@ -92,7 +92,7 @@ const AdvertisementList = () => {
                       {item.label || "Advertisement"}
                     </span>
                     <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                      {item.isEnabled ? "Enabled" : "Disabled"}
+                      {item.isEnabled ? "On" : "Off"}
                     </span>
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews || 4} news
@@ -117,9 +117,9 @@ const AdvertisementList = () => {
                 <div className="flex lg:flex-col gap-2 shrink-0">
                   <button
                     onClick={() => toggleAdvertisement(item._id)}
-                    className={`px-4 py-3 rounded-2xl font-black text-sm ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
+                    className={`px-4 py-3 rounded-2xl font-black text-sm flex-1 lg:flex-none text-center ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
                   >
-                    {item.isEnabled ? "Disable" : "Enable"}
+                    {item.isEnabled ? "Turn Off" : "Turn On"}
                   </button>
                   <Link to={`/advertisements/edit/${item._id}`} className="p-3 bg-slate-100 rounded-2xl hover:bg-slate-200 flex items-center justify-center">
                     <FiEdit className="text-slate-700" />

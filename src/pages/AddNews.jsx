@@ -54,6 +54,7 @@ const AddNews = () => {
     breakingTextColor: "#FFFFFF",
     isBreakingBlink: false,
     isActive: true,
+    hideReporter: false,
     publishedDate: new Date().toISOString().split("T")[0],
     cities: [],
   });
@@ -210,6 +211,7 @@ const AddNews = () => {
       formData.append('breakingTextColor', form.breakingTextColor || '#FFFFFF');
       formData.append('isBreakingBlink', form.isBreakingBlink);
       formData.append('isActive', form.isActive);
+      formData.append('hideReporter', form.hideReporter);
       formData.append('publishedDate', form.publishedDate);
       formData.append('cities', JSON.stringify(form.cities || []));
       
@@ -242,6 +244,31 @@ const AddNews = () => {
   useEffect(() => {
     fetchCategories();
     fetchCities();
+
+    const preloadDefaultImage = async () => {
+      try {
+        let imgUrlToFetch = '/breaking_placeholder.jpg';
+        try {
+          const settingsRes = await axiosInstance.get("/settings");
+          const defaultNewsImage = settingsRes.data?.settings?.defaultNewsImage;
+          if (defaultNewsImage) {
+            imgUrlToFetch = getFullMediaUrl(defaultNewsImage);
+          }
+        } catch (setErr) {
+          console.error("Failed to fetch settings for default image", setErr);
+        }
+
+        const response = await fetch(imgUrlToFetch);
+        if (response.ok) {
+          const blob = await response.blob();
+          const file = new File([blob], 'default_news_image.jpg', { type: blob.type });
+          setSelectedFiles([file]);
+        }
+      } catch (err) {
+        console.error("Failed to preload default image", err);
+      }
+    };
+    preloadDefaultImage();
   }, []);
 
   return (
@@ -550,6 +577,23 @@ const AddNews = () => {
                 </label>
               </div>
 
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+                <div>
+                  <p className="font-bold text-slate-800">Hide Reporter Info</p>
+                  <p className="text-xs text-slate-500">Turn on to hide the reporter name and image in the app.</p>
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
+                  <input
+                    name="hideReporter"
+                    type="checkbox"
+                    checked={form.hideReporter}
+                    onChange={handleChange}
+                    className="h-5 w-5 accent-red-500"
+                  />
+                  {form.hideReporter ? "Hidden" : "Visible"}
+                </label>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   Published Date
@@ -746,7 +790,7 @@ const AddNews = () => {
               <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
                 <div className="flex items-center justify-between">
                   {/* Reporter Info */}
-                  {(user?.name || user?.profileImage) ? (
+                  {!form.hideReporter && (user?.name || user?.profileImage) ? (
                     <div className="flex items-center gap-2 max-w-[60%]">
                       {user?.profileImage && (
                         <img
@@ -791,7 +835,7 @@ const AddNews = () => {
       <ImageCropModal
         file={cropFile}
         title="Crop News Image"
-        aspect={16 / 9}
+        aspect={undefined}
         onCropDone={handleCropDone}
         onUseOriginal={handleUseOriginalImage}
         onCancel={handleCancelCropImage}

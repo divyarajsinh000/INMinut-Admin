@@ -13,7 +13,7 @@ const EmbedList = () => {
 
   const fetchEmbeds = async () => {
     try {
-      const res = await axiosInstance.get("/embeds");
+      const res = await axiosInstance.get("/embeds?sort=recent");
       setEmbeds(res.data.data || []);
     } catch (error) {
       toast.error("Failed to load embeds");
@@ -78,7 +78,7 @@ const EmbedList = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-3">
                     <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                      {item.isEnabled ? "Active" : "Inactive"}
+                      {item.isEnabled ? "On" : "Off"}
                     </span>
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews} news
@@ -105,9 +105,9 @@ const EmbedList = () => {
                 <div className="flex lg:flex-col gap-2 shrink-0 w-full lg:w-auto">
                   <button
                     onClick={() => toggleEmbed(item._id)}
-                    className={`px-4 py-3 rounded-2xl font-black text-sm ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
+                    className={`px-4 py-3 rounded-2xl font-black text-sm flex-1 lg:flex-none text-center ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
                   >
-                    {item.isEnabled ? "Disable" : "Enable"}
+                    {item.isEnabled ? "Turn Off" : "Turn On"}
                   </button>
                   <Link to={`/embeds/edit/${item._id}`} className="p-3 bg-slate-100 rounded-2xl hover:bg-slate-200 flex items-center justify-center">
                     <FiEdit className="text-slate-700" />

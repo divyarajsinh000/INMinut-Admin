@@ -9,6 +9,7 @@ import ImageCropModal from "../components/ImageCropModal";
 const AddAdvertisement = () => {
   const navigate = useNavigate();
   const [cities, setCities] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bannerImage, setBannerImage] = useState(null);
   const [preview, setPreview] = useState("");
@@ -18,6 +19,7 @@ const AddAdvertisement = () => {
     label: "Advertisement",
     redirectUrl: "",
     cities: [],
+    categories: [],
     positionAfterNews: 4,
     isEnabled: true,
   });
@@ -31,12 +33,21 @@ const AddAdvertisement = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await axiosInstance.get("/categories");
+      setCategories(res.data.data || []);
+    } catch (error) {
+      toast.error("Failed to load categories");
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "cities") {
+    if (name === "cities" || name === "categories") {
       const values = Array.from(e.target.selectedOptions).map((option) => option.value);
-      setForm((prev) => ({ ...prev, cities: values }));
+      setForm((prev) => ({ ...prev, [name]: values }));
       return;
     }
 
@@ -85,6 +96,7 @@ const AddAdvertisement = () => {
       formData.append("label", form.label);
       formData.append("redirectUrl", form.redirectUrl);
       formData.append("cities", JSON.stringify(form.cities || []));
+      formData.append("categories", JSON.stringify(form.categories || []));
       formData.append("positionAfterNews", form.positionAfterNews);
       formData.append("isEnabled", form.isEnabled);
       formData.append("bannerImage", bannerImage);
@@ -104,6 +116,7 @@ const AddAdvertisement = () => {
 
   useEffect(() => {
     fetchCities();
+    fetchCategories();
   }, []);
 
   return (
@@ -144,6 +157,24 @@ const AddAdvertisement = () => {
           </div>
 
           <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Target Categories</label>
+            <select
+              name="categories"
+              value={form.categories || []}
+              onChange={handleChange}
+              multiple
+              className="w-full min-h-36 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+            >
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-1">Hold Ctrl (or Cmd) to select multiple. Leave empty to show in all categories.</p>
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Show after how many news?</label>
             <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
             <p className="text-xs text-slate-500 mt-1">Set to 0 to show at the very top of the feed, or 4 to show after the 4th news card.</p>
@@ -181,7 +212,7 @@ const AddAdvertisement = () => {
       <ImageCropModal
         file={cropFile}
         title="Crop Advertisement Banner"
-        aspect={16 / 9}
+        aspect={undefined}
         cropShape="rect"
         onCropDone={handleCropDone}
         onUseOriginal={handleUseOriginalImage}

@@ -24,6 +24,7 @@ const EditAdvertisement = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cities, setCities] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [bannerImage, setBannerImage] = useState(null);
@@ -34,6 +35,7 @@ const EditAdvertisement = () => {
     label: "Advertisement",
     redirectUrl: "",
     cities: [],
+    categories: [],
     positionAfterNews: 4,
     isEnabled: true,
   });
@@ -47,6 +49,15 @@ const EditAdvertisement = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await axiosInstance.get("/categories");
+      setCategories(res.data.data || []);
+    } catch (error) {
+      toast.error("Failed to load categories");
+    }
+  };
+
   const fetchAdvertisement = async () => {
     try {
       const res = await axiosInstance.get(`/advertisements/${id}`);
@@ -56,6 +67,7 @@ const EditAdvertisement = () => {
         label: ad.label || "Advertisement",
         redirectUrl: ad.redirectUrl || "",
         cities: getCityIds(ad.cities),
+        categories: getCityIds(ad.categories),
         positionAfterNews: ad.positionAfterNews !== undefined ? ad.positionAfterNews : 4,
         isEnabled: Boolean(ad.isEnabled),
       });
@@ -70,9 +82,9 @@ const EditAdvertisement = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    if (name === "cities") {
+    if (name === "cities" || name === "categories") {
       const values = Array.from(e.target.selectedOptions).map((option) => option.value);
-      setForm((prev) => ({ ...prev, cities: values }));
+      setForm((prev) => ({ ...prev, [name]: values }));
       return;
     }
 
@@ -116,6 +128,7 @@ const EditAdvertisement = () => {
       formData.append("label", form.label);
       formData.append("redirectUrl", form.redirectUrl);
       formData.append("cities", JSON.stringify(form.cities || []));
+      formData.append("categories", JSON.stringify(form.categories || []));
       formData.append("positionAfterNews", form.positionAfterNews);
       formData.append("isEnabled", form.isEnabled);
       if (bannerImage) formData.append("bannerImage", bannerImage);
@@ -135,6 +148,7 @@ const EditAdvertisement = () => {
 
   useEffect(() => {
     fetchCities();
+    fetchCategories();
     fetchAdvertisement();
   }, [id]);
 
@@ -180,6 +194,24 @@ const EditAdvertisement = () => {
           </div>
 
           <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Target Categories</label>
+            <select
+              name="categories"
+              value={form.categories || []}
+              onChange={handleChange}
+              multiple
+              className="w-full min-h-36 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+            >
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-1">Hold Ctrl (or Cmd) to select multiple. Leave empty to show in all categories.</p>
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Show after how many news?</label>
             <input name="positionAfterNews" type="number" min="0" value={form.positionAfterNews} onChange={handleChange} className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500" />
           </div>
@@ -216,7 +248,7 @@ const EditAdvertisement = () => {
       <ImageCropModal
         file={cropFile}
         title="Crop Advertisement Banner"
-        aspect={16 / 9}
+        aspect={undefined}
         cropShape="rect"
         onCropDone={handleCropDone}
         onUseOriginal={handleUseOriginalImage}
