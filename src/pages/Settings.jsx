@@ -5,8 +5,10 @@ import { toast } from "react-toastify";
 import { getFullMediaUrl } from "../components/MediaPreview";
 import { FiUpload, FiImage } from "react-icons/fi";
 import ImageCropModal from "../components/ImageCropModal";
+import { useSettings } from "../context/SettingsContext";
 
 const Settings = () => {
+  const { reloadSettings } = useSettings();
   const [settings, setSettings] = useState({
     appLogo: "",
     appIcon: "",
@@ -92,6 +94,7 @@ const Settings = () => {
       if (res.data.settings) {
         setSettings(res.data.settings);
         setFiles({ appLogo: null, appIcon: null, defaultNewsImage: null, defaultShareImage: null });
+        reloadSettings();
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to update settings");

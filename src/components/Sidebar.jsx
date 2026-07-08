@@ -16,11 +16,13 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import { getFullMediaUrl } from "../components/MediaPreview";
+import { useSettings } from "../context/SettingsContext";
 
 const Sidebar = ({ open = false, onClose = () => {} }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { appLogo } = useSettings();
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -72,7 +74,7 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
       <div className="relative z-10 flex items-center justify-between border-b border-white/10 p-5">
         <div className="flex items-center gap-3">
           <img
-            src="/logo-dark.png"
+            src={appLogo || "/logo-dark.png"}
             alt="INMinut"
             className="h-11 w-36 rounded-2xl object-contain"
           />

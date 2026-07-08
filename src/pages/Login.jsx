@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiLock, FiMail } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { appLogo } = useSettings();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,7 @@ const Login = () => {
         <div className="hidden lg:flex bg-gradient-to-br from-red-500 via-red-600 to-red-700 p-10 text-white flex-col justify-between">
           <div className="flex items-center gap-3">
             <img
-              src="/logo-light.png"
+              src={appLogo || "/logo-light.png"}
               alt="INMinut"
               className="h-12 w-48 rounded-2xl object-contain drop-shadow-sm"
             />
@@ -50,7 +52,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="p-8 sm:p-10 lg:p-12">
           <div className="lg:hidden mb-8 flex items-center gap-3">
             <img
-              src="/logo-light.png"
+              src={appLogo || "/logo-light.png"}
               alt="INMinut"
               className="h-11 w-44 rounded-2xl object-contain"
             />

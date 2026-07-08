@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SettingsProvider } from "./context/SettingsContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NewsList from "./pages/NewsList";
@@ -27,9 +28,10 @@ import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
+    <SettingsProvider>
+      <>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/login" element={<Login />} />
 
@@ -225,10 +227,11 @@ function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
 
-      <ToastContainer position="top-right" autoClose={2500} />
-    </>
+        <ToastContainer position="top-right" autoClose={2500} />
+      </>
+    </SettingsProvider>
   );
 }
 
