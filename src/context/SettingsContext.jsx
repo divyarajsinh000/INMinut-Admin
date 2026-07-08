@@ -28,19 +28,25 @@ export const SettingsProvider = ({ children }) => {
   }, []);
 
   // Dynamically update the browser favicon whenever appIcon changes.
+  // Browsers cache favicons aggressively — we must REMOVE the old link element
+  // and INSERT a fresh one (with a cache-busting timestamp) to force a reload.
   useEffect(() => {
     if (!settings?.appIcon) return;
     const iconUrl = getFullMediaUrl(settings.appIcon);
     if (!iconUrl) return;
 
-    let link = document.querySelector("link[rel='icon']");
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
+    // Remove every existing icon link to avoid stale cached entries.
+    document
+      .querySelectorAll("link[rel~='icon']")
+      .forEach((el) => el.parentNode?.removeChild(el));
+
+    // Insert a brand-new <link> with a cache-busting query param.
+    const cacheBustedUrl = `${iconUrl}${iconUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+    const link = document.createElement("link");
+    link.rel = "icon";
     link.type = "image/png";
-    link.href = iconUrl;
+    link.href = cacheBustedUrl;
+    document.head.appendChild(link);
   }, [settings?.appIcon]);
 
   const appLogo = settings?.appLogo ? getFullMediaUrl(settings.appLogo) : null;
