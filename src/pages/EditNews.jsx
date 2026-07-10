@@ -691,206 +691,201 @@ const EditNews = () => {
           </div>
 
         {/* Right Side: Live Preview */}
-        <div className="w-full lg:w-[380px] space-y-4 shrink-0">
-          <div className="bg-slate-100 rounded-[30px] p-4 border-4 border-slate-300 shadow-xl w-full">
-            <div className="text-center mb-2">
-              <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">LIVE APP PREVIEW</span>
+        <div className="w-full shrink-0 space-y-4 lg:sticky lg:top-5 lg:w-[390px]">
+          <div className="w-full rounded-[30px] border-4 border-slate-300 bg-slate-100 p-4 shadow-xl">
+            <div className="mb-2 text-center">
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Live app preview</span>
             </div>
 
-            {/* The Phone/Card Outer Shell */}
-            <div className="bg-white rounded-[24px] overflow-hidden shadow-md border border-slate-200 h-[620px] flex flex-col justify-between relative">
-              
-              {/* Scrollable Container for Card Content */}
-              <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                
-                {/* 1. Image/Media Section */}
-                {previewImageUrl ? (
-                  <div className="relative h-56 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                    <img
-                      src={previewImageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                    />
+            <div className="h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2 custom-scrollbar">
+              <div className="mb-[10px] overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
+                {previewImageUrl && (
+                  <div className="relative w-full overflow-hidden bg-white" style={{ height: 300 }}>
+                    <img src={previewImageUrl} alt="Preview" className="h-full w-full scale-[1.015] object-cover object-center" />
 
-                    {/* Breaking Badge overlay on Image */}
                     {form.isBreaking && (
                       <div
-                        className="absolute top-0 left-0 flex items-center gap-1 px-3 py-1.5 font-black uppercase text-[10px] tracking-wider select-none"
+                        className="absolute left-0 top-0 flex items-center gap-[5px] rounded-br-[18px] rounded-tl-[23px] px-[15px] py-2 text-[11px] font-black uppercase tracking-[0.8px]"
                         style={{
-                          backgroundColor: form.breakingBgColor || "#EF4444",
-                          color: form.breakingTextColor || "#FFFFFF",
-                          borderTopLeftRadius: "20px",
-                          borderBottomRightRadius: "14px",
-                          animation: form.isBreakingBlink ? "pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                          backgroundColor: form.breakingBgColor || '#EF4444',
+                          color: form.breakingTextColor || '#FFFFFF',
+                          animation: form.isBreakingBlink ? 'pulse 1.6s ease-in-out infinite' : 'none',
                         }}
                       >
-                        <span style={{ color: "#FACC15" }}>⚡</span>
-                        <span>{form.breakingText || "Breaking"}</span>
+                        <span className="text-[13px]">⚡</span>
+                        <span>{form.breakingText?.trim() || 'Breaking'}</span>
+                      </div>
+                    )}
+
+                    {selectedFiles.filter((file) => getMediaType(file) === 'image').length + (form.media || []).filter((media) => mediaToKeep.includes(media._id) && getMediaType(media) === 'image').length > 1 && (
+                      <div className="absolute bottom-[14px] left-0 right-0 flex justify-center gap-[6px]">
+                        <span className="h-[7px] w-5 rounded-full bg-[#F97316]" />
+                        {Array.from({ length: Math.min(4, selectedFiles.filter((file) => getMediaType(file) === 'image').length + (form.media || []).filter((media) => mediaToKeep.includes(media._id) && getMediaType(media) === 'image').length - 1) }).map((_, index) => (
+                          <span key={index} className="h-[7px] w-[7px] rounded-full bg-white/70" />
+                        ))}
                       </div>
                     )}
                   </div>
-                ) : null}
+                )}
 
-                {/* Card Content Area */}
                 <div className="p-4">
-                  {/* Category and Date Row */}
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full"
-                      style={{
-                        backgroundColor: categories.find((cat) => cat._id === form.category)?.backgroundColor || "#E2E8F0",
-                        color: categories.find((cat) => cat._id === form.category)?.textColor || "#475569",
-                      }}
-                    >
-                      {categories.find((cat) => cat._id === form.category)?.name || "Category"}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-bold">
-                      {form.publishedDate ? new Date(form.publishedDate).toLocaleDateString() : "Today"}
-                    </span>
+                  <div className="mb-[10px] flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px] pr-1">
+                      <span
+                        className="shrink-0 rounded-full px-[11px] py-[5px] text-[11px] font-black uppercase"
+                        style={{
+                          backgroundColor: categories.find((cat) => cat._id === form.category)?.backgroundColor || '#F97316',
+                          color: categories.find((cat) => cat._id === form.category)?.textColor || '#FFFFFF',
+                        }}
+                      >
+                        {categories.find((cat) => cat._id === form.category)?.name || 'News'}
+                      </span>
+
+                      {(form.cities || []).map((cityId) => {
+                        const city = cities.find((entry) => entry._id === cityId);
+                        if (!city) return null;
+                        return (
+                          <span key={cityId} className="inline-flex max-w-full items-center gap-[3px] rounded-full border border-[#DBEAFE] bg-[#EFF6FF] px-2 py-1 text-[11px] font-extrabold leading-[14px] text-[#0F3D8E]">
+                            <svg className="h-3 w-3 shrink-0 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z" />
+                              <circle cx="12" cy="10" r="2.5" />
+                            </svg>
+                            <span className="truncate">{city.name}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-1 pt-1 text-[12px] font-bold text-slate-400">
+                      <svg className="h-[13px] w-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="5" width="18" height="16" rx="2" />
+                        <path d="M16 3v4M8 3v4M3 11h18" />
+                      </svg>
+                      <span>{form.publishedDate ? new Date(`${form.publishedDate}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today'}</span>
+                    </div>
                   </div>
 
-                  {/* Inline Breaking Badge (when no image) */}
-                  {!previewImageUrl && form.isBreaking && (
+                  {form.isBreaking && !previewImageUrl && (
                     <div
-                      className="inline-flex items-center gap-1 px-3 py-1.5 font-black uppercase text-[10px] tracking-wider mb-2.5"
+                      className="mb-3 inline-flex items-center gap-[5px] rounded-bl-md rounded-br-[16px] rounded-tl-[16px] rounded-tr-md px-[14px] py-[7px] text-[11px] font-black uppercase tracking-[0.8px]"
                       style={{
-                        backgroundColor: form.breakingBgColor || "#EF4444",
-                        color: form.breakingTextColor || "#FFFFFF",
-                        borderTopLeftRadius: "12px",
-                        borderBottomRightRadius: "12px",
-                        borderTopRightRadius: "4px",
-                        borderBottomLeftRadius: "4px",
-                        animation: form.isBreakingBlink ? "pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                        backgroundColor: form.breakingBgColor || '#EF4444',
+                        color: form.breakingTextColor || '#FFFFFF',
+                        animation: form.isBreakingBlink ? 'pulse 1.6s ease-in-out infinite' : 'none',
                       }}
                     >
-                      <span style={{ color: "#FACC15" }}>⚡</span>
-                      <span>{form.breakingText || "Breaking"}</span>
+                      <span className="text-[13px]">⚡</span>
+                      <span>{form.breakingText?.trim() || 'Breaking'}</span>
                     </div>
                   )}
 
-                  {/* News Title */}
                   {form.titleLink ? (
                     <a
                       href={form.titleLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="mb-2 block font-black leading-tight tracking-tight line-clamp-2 underline decoration-red-400 underline-offset-4"
+                      className="mb-2 block font-black no-underline"
                       style={{
-                        color: form.titleColor || "#111827",
-                        fontSize: `${form.titleFontSize || 20}px`,
+                        color: form.titleColor || '#0F3D8E',
+                        fontSize: `${Math.min(34, Math.max(14, Number(form.titleFontSize) || 20))}px`,
+                        lineHeight: 1.28,
+                        fontFamily: 'Hind Vadodara, system-ui, sans-serif',
                       }}
                     >
-                      {form.title || "News Title Preview"}
+                      {form.title || 'News Title Preview'} <span className="text-[#F97316]">↗</span>
                     </a>
                   ) : (
                     <h3
-                      className="font-black leading-tight mb-2 tracking-tight line-clamp-2"
+                      className="mb-2 font-black"
                       style={{
-                        color: form.titleColor || "#111827",
-                        fontSize: `${form.titleFontSize || 20}px`,
+                        color: form.titleColor || '#0F3D8E',
+                        fontSize: `${Math.min(34, Math.max(14, Number(form.titleFontSize) || 20))}px`,
+                        lineHeight: 1.28,
+                        fontFamily: 'Hind Vadodara, system-ui, sans-serif',
                       }}
                     >
-                      {form.title || "News Title Preview"}
+                      {form.title || 'News Title Preview'}
                     </h3>
                   )}
 
-                  {/* News Description */}
-                  <div className="mb-2">
+                  <div className="mb-3">
                     <div
-                      className={`text-slate-600 font-medium ql-editor !p-0 ${previewExpanded ? "" : "line-clamp-[5] text-ellipsis overflow-hidden"}`}
+                      className={`ql-editor !p-0 font-semibold text-slate-600 ${previewExpanded ? '' : 'line-clamp-[5] overflow-hidden'}`}
                       style={{
-                        fontSize: `${form.descriptionFontSize || 14}px`,
+                        fontSize: `${Math.min(28, Math.max(12, Number(form.descriptionFontSize) || 14))}px`,
                         lineHeight: 1.45,
+                        fontFamily: 'Hind Vadodara, system-ui, sans-serif',
                       }}
                       dangerouslySetInnerHTML={{
-                        __html: sanitizeRichText(form.description || "<p>News description preview will show here...</p>"),
+                        __html: sanitizeRichText(form.description || '<p>News description preview will show here...</p>'),
                       }}
                     />
                     {form.description && (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewExpanded(!previewExpanded)}
-                        className="text-[11px] font-black text-[#F97316] mt-1 hover:underline focus:outline-none"
-                      >
-                        {previewExpanded ? "Read less" : "... Read more"}
+                      <button type="button" onClick={() => setPreviewExpanded((value) => !value)} className="mt-1 inline-flex items-center gap-1 text-[13px] font-black text-[#F97316]">
+                        {previewExpanded ? 'Read less' : '... Read more'}
+                        <span>{previewExpanded ? '⌃' : ''}</span>
                       </button>
                     )}
                   </div>
 
-                  {/* Videos Preview */}
-                  {videos.map((vid, idx) => (
-                    <div key={`vid-${idx}`} className="w-full h-40 bg-slate-900 rounded-2xl overflow-hidden relative flex items-center justify-center text-white my-3 shrink-0 select-none">
-                      <span className="absolute top-2 left-2 bg-black/60 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Video</span>
-                      <div className="w-10 h-10 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-white backdrop-blur-sm">
-                        <svg className="w-5 h-5 fill-current translate-x-0.5" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                      <span className="absolute bottom-2 left-3 text-[10px] truncate max-w-[85%] font-bold text-slate-300">
-                        {vid.name || "Video attachment"}
-                      </span>
+                  {videos.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      {videos.map((video, index) => (
+                        <div key={`video-${index}`} className="relative flex h-40 items-center justify-center overflow-hidden rounded-[18px] bg-slate-900 text-white">
+                          <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[10px] font-black uppercase">Video</span>
+                          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/20 text-xl">▶</span>
+                          <span className="absolute bottom-3 left-3 right-3 truncate text-[11px] font-bold text-slate-200">{video.name || 'Video attachment'}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-
-                  {/* PDFs Preview */}
-                  {pdfs.map((pdf, idx) => (
-                    <div key={`pdf-${idx}`} className="w-full flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-2xl my-3 text-red-950 shrink-0">
-                      <div className="w-9 h-9 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-bold truncate">{pdf.name || "Document.pdf"}</p>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">PDF Document</p>
-                      </div>
-                    </div>
-                  ))}
-
-                </div>
-              </div>
-
-              {/* Card Footer (Reporter & Actions) */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
-                <div className="flex items-center justify-between">
-                  {/* Reporter Info */}
-                  {!form.hideReporter && (form.reporter?.name?.trim() || form.reporter?.avatar?.trim()) ? (
-                    <div className="flex items-center gap-2 max-w-[60%]">
-                      {form.reporter?.avatar?.trim() && (
-                        <img
-                          src={getFullMediaUrl(form.reporter.avatar)}
-                          alt="Avatar"
-                          className="w-8 h-8 rounded-full border border-slate-200 object-cover"
-                        />
-                      )}
-                      {form.reporter?.name?.trim() && (
-                        <span className="text-[11px] font-bold text-slate-800 truncate">
-                          {form.reporter.name}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div />
                   )}
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 ml-auto">
-                    {/* Share Button */}
-                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 10.742l4.685-2.618m0 5.748L8.684 13.26m5.916-7.38c1.332 0 2.41 1.078 2.41 2.41 0 1.333-1.078 2.41-2.41 2.41-1.333 0-2.41-1.078-2.41-2.41 0-1.332 1.077-2.41 2.41-2.41zm0 9.782c1.332 0 2.41 1.078 2.41 2.41 0 1.333-1.078 2.41-2.41 2.41-1.333 0-2.41-1.078-2.41-2.41 0-1.332 1.077-2.41 2.41-2.41z" />
-                      </svg>
+                  {pdfs.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      {pdfs.map((pdf, index) => (
+                        <div key={`pdf-${index}`} className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 p-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-lg text-orange-600">📄</div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[12px] font-extrabold text-slate-900">{pdf.name || 'Document.pdf'}</p>
+                            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">PDF document</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    {/* Save Button */}
-                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                      </svg>
+                  )}
+
+                  {form.hashtags?.filter((tag) => tag.trim()).length > 0 && (
+                    <div className="mb-[14px] flex flex-wrap gap-2">
+                      {form.hashtags.filter((tag) => tag.trim()).slice(0, previewExpanded ? undefined : 3).map((tag, index) => (
+                        <span key={`${tag}-${index}`} className="rounded-full bg-[#EFF6FF] px-[9px] py-[5px] text-[12px] font-extrabold text-[#0F3D8E]">#{tag.replace(/^#/, '')}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between gap-[10px]">
+                    {!form.hideReporter && (form.reporter?.name?.trim() || form.reporter?.avatar?.trim()) && (
+                    <div className="flex min-w-0 flex-1 items-center gap-2 pr-2">
+                      {form.reporter?.avatar?.trim() && <img src={getFullMediaUrl(form.reporter.avatar)} alt="Reporter" className="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />}
+                      {form.reporter?.name?.trim() && <span className="truncate text-[13px] font-extrabold text-slate-900">{form.reporter.name}</span>}
+                    </div>
+                  )}
+                    <div className="ml-auto flex shrink-0 gap-2">
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[14px] border border-[#25D366] bg-[#25D366] text-white">
+                        <span className="text-[19px] font-black">◉</span>
+                      </div>
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC] text-slate-900">
+                        <svg className="h-[19px] w-[19px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4"/></svg>
+                      </div>
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC] text-slate-900">
+                        <svg className="h-[19px] w-[19px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4-7 4V5z"/></svg>
+                      </div>
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC] text-slate-900">
+                        <svg className="h-[19px] w-[19px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 000-7.8z"/></svg>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
