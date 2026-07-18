@@ -22,12 +22,7 @@ const Policy = () => {
             <span className="h-5 w-px bg-slate-300 hidden sm:inline" />
             <p className="text-sm font-bold text-slate-500 tracking-tight">Legal Document</p>
           </div>
-          <Link
-            to="/login"
-            className="text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-red-600 transition-colors px-4 py-2 bg-slate-100 hover:bg-red-50 rounded-xl"
-          >
-            Go to Portal
-          </Link>
+
         </header>
 
         {/* Content Box */}
@@ -556,13 +551,13 @@ const Policy = () => {
               <p className="mb-4">
                 For privacy-related questions, requests, complaints, or grievances concerning InMinut, contact:
               </p>
-              
+
               <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 space-y-2 max-w-md">
                 <p className="font-bold text-slate-900 text-lg">InMinut Enterprise</p>
                 <div className="h-px bg-slate-200 my-2" />
                 <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Contact Person:</strong> Hiren Joshi</p>
-                <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Email:</strong> <a href="mailto:support@inminut.com" className="text-red-600 hover:underline">support@inminut.com</a></p>
-                <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Phone:</strong> +91 99090 90909</p>
+                <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Email:</strong> <a href="mailto:inminut@gmail.com" className="text-red-600 hover:underline">inminut@gmail.com</a></p>
+                <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Phone:</strong> +91 8000801315</p>
                 <p className="text-sm font-medium text-slate-600"><strong className="text-slate-900">Address:</strong> Ahmedabad &ndash; 380052, Gujarat, India</p>
               </div>
             </section>
