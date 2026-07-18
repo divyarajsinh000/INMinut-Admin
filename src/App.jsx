@@ -22,6 +22,7 @@ import AddEmbed from "./pages/AddEmbed";
 import EditEmbed from "./pages/EditEmbed";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Policy from "./pages/Policy";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,6 +35,7 @@ function App() {
           <Routes>
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/policy" element={<Policy />} />
 
           <Route
             path="/dashboard"
