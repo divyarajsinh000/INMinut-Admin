@@ -31,6 +31,17 @@ const axiosInstance = axios.create({
   },
 });
 
+const pendingRequests = new Map();
+
+const getRequestKey = (config) => {
+  return [
+    config.method,
+    config.url,
+    JSON.stringify(config.params || {}),
+    JSON.stringify(config.data || {})
+  ].join("&");
+};
+
 axiosInstance.interceptors.request.use((config) => {
   config.url = normalizeRequestPath(config.url);
 
@@ -39,12 +50,35 @@ axiosInstance.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  const requestKey = getRequestKey(config);
+  if (pendingRequests.has(requestKey)) {
+    const controller = new AbortController();
+    config.signal = controller.signal;
+    controller.abort("Duplicate request canceled");
+  } else {
+    config.requestKey = requestKey;
+    pendingRequests.set(requestKey, true);
+  }
+
   return config;
 });
 
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config && response.config.requestKey) {
+      pendingRequests.delete(response.config.requestKey);
+    }
+    return response;
+  },
   (error) => {
+    if (error.config && error.config.requestKey) {
+      pendingRequests.delete(error.config.requestKey);
+    }
+
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
     const status = error?.response?.status;
     const requestUrl = String(error?.config?.url || "");
     const isLoginRequest = requestUrl.includes("/admin/login");
