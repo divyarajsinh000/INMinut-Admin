@@ -7,6 +7,8 @@ import {
   FiActivity,
   FiBarChart2,
   FiBookmark,
+  FiCalendar,
+  FiFilter,
   FiEye,
   FiFileText,
   FiHash,
@@ -14,6 +16,7 @@ import {
   FiRefreshCw,
   FiShare2,
   FiSmartphone,
+  FiX,
   FiTag,
   FiTrendingUp,
   FiUsers,
@@ -43,7 +46,7 @@ const EmptyState = ({ text = "No data yet" }) => (
 );
 
 const tabs = [
-  { key: "today", label: "Today's Analytics", icon: FiActivity },
+  { key: "today", label: "Period Analytics", icon: FiActivity },
   { key: "category", label: "Category Wise", icon: FiTag },
   { key: "city", label: "City Wise", icon: FiMapPin },
   { key: "overall", label: "Overall Analytics", icon: FiBarChart2 },
@@ -290,15 +293,202 @@ const Header = ({ activeTab, setActiveTab, onRefresh }) => (
   </div>
 );
 
+
+const PERIOD_OPTIONS = [
+  { value: "today", label: "Today" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "1m", label: "Last 1 month" },
+  { value: "3m", label: "Last 3 months" },
+  { value: "6m", label: "Last 6 months" },
+  { value: "1y", label: "Last 1 year" },
+  { value: "all", label: "All time" },
+  { value: "custom", label: "Custom date" },
+];
+
+const defaultFilters = {
+  period: "1m",
+  startDate: "",
+  endDate: "",
+  status: "all",
+  breaking: "all",
+  pinned: "all",
+  search: "",
+  limit: 10,
+};
+
+const AnalyticsFilters = ({ filters, setFilters, onApply, onReset, loading }) => {
+  const update = (key, value) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+  };
+
+  return (
+    <section className="mb-6 rounded-[1.5rem] border border-red-100 bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-red-600">
+            <FiFilter />
+            <p className="text-xs font-black uppercase tracking-widest">Analytics Filters</p>
+          </div>
+          <p className="mt-1 text-sm font-semibold text-slate-500">
+            All totals, rankings and charts use the same selected filters.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-slate-600 hover:bg-slate-50"
+        >
+          <FiX /> Reset
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Period</span>
+          <select
+            value={filters.period}
+            onChange={(event) => update("period", event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+          >
+            {PERIOD_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">News status</span>
+          <select
+            value={filters.status}
+            onChange={(event) => update("status", event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+          >
+            <option value="all">All news</option>
+            <option value="active">Active only</option>
+            <option value="inactive">Inactive only</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Breaking</span>
+          <select
+            value={filters.breaking}
+            onChange={(event) => update("breaking", event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+          >
+            <option value="all">All</option>
+            <option value="yes">Breaking only</option>
+            <option value="no">Exclude breaking</option>
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Pinned</span>
+          <select
+            value={filters.pinned}
+            onChange={(event) => update("pinned", event.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+          >
+            <option value="all">All</option>
+            <option value="yes">Pinned only</option>
+            <option value="no">Exclude pinned</option>
+          </select>
+        </label>
+
+        {filters.period === "custom" && (
+          <>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Start date</span>
+              <div className="relative">
+                <FiCalendar className="pointer-events-none absolute left-3 top-3 text-slate-400" />
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(event) => update("startDate", event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+                />
+              </div>
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">End date</span>
+              <div className="relative">
+                <FiCalendar className="pointer-events-none absolute left-3 top-3 text-slate-400" />
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(event) => update("endDate", event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+                />
+              </div>
+            </label>
+          </>
+        )}
+
+        <label className="block xl:col-span-2">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Search news</span>
+          <input
+            value={filters.search}
+            onChange={(event) => update("search", event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onApply();
+            }}
+            placeholder="Title, description, hashtag or reporter"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400 focus:border-red-400"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">Top results</span>
+          <select
+            value={filters.limit}
+            onChange={(event) => update("limit", Number(event.target.value))}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-red-400"
+          >
+            {[5, 10, 20, 30, 50].map((value) => <option key={value} value={value}>{value} results</option>)}
+          </select>
+        </label>
+
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={onApply}
+            disabled={loading || (filters.period === "custom" && (!filters.startDate || !filters.endDate))}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-red-500/20 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FiFilter /> {loading ? "Applying..." : "Apply Filters"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Analytics = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("today");
+  const [filters, setFilters] = useState(defaultFilters);
+  const [appliedFilters, setAppliedFilters] = useState(defaultFilters);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (selectedFilters = appliedFilters) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/news/analytics/dashboard", { params: { limit: 10 } });
+      const params = {
+        period: selectedFilters.period,
+        status: selectedFilters.status,
+        breaking: selectedFilters.breaking,
+        pinned: selectedFilters.pinned,
+        search: selectedFilters.search?.trim() || undefined,
+        limit: selectedFilters.limit,
+      };
+
+      if (selectedFilters.period === "custom") {
+        params.startDate = selectedFilters.startDate;
+        params.endDate = selectedFilters.endDate;
+      }
+
+      const response = await axiosInstance.get("/news/analytics/dashboard", { params });
       setData(response.data.data);
     } catch (error) {
       toast.error("Failed to load analytics");
@@ -308,8 +498,27 @@ const Analytics = () => {
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchAnalytics(defaultFilters);
   }, []);
+
+  const applyFilters = () => {
+    if (filters.period === "custom" && (!filters.startDate || !filters.endDate)) {
+      toast.error("Select both start and end dates");
+      return;
+    }
+    if (filters.period === "custom" && filters.startDate > filters.endDate) {
+      toast.error("Start date cannot be after end date");
+      return;
+    }
+    setAppliedFilters(filters);
+    fetchAnalytics(filters);
+  };
+
+  const resetFilters = () => {
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    fetchAnalytics(defaultFilters);
+  };
 
   const totals = data?.totals || {};
   const charts = data?.charts || {};
@@ -319,21 +528,21 @@ const Analytics = () => {
     const topTodayCity = data?.todayTopNewsCities?.[0];
 
     return [
-      { label: "Today's News", value: totals.todayNews, icon: FiFileText, tone: "cyan" },
-      { label: "Today's Views", value: totals.todayViews, icon: FiEye, tone: "blue" },
-      { label: "Today's Saves", value: totals.todaySaves, icon: FiBookmark, tone: "green" },
-      { label: "Today's Shares", value: totals.todayShares, icon: FiShare2, tone: "purple" },
-      { label: "Today Active Users", value: totals.todayActiveUsers, icon: FiActivity, tone: "orange" },
-      { label: "New Guests Today", value: totals.todayGuestUsers, icon: FiUsers, tone: "slate" },
+      { label: "News in Period", value: totals.todayNews, icon: FiFileText, tone: "cyan" },
+      { label: "Views in Period", value: totals.todayViews, icon: FiEye, tone: "blue" },
+      { label: "Saves in Period", value: totals.todaySaves, icon: FiBookmark, tone: "green" },
+      { label: "Shares in Period", value: totals.todayShares, icon: FiShare2, tone: "purple" },
+      { label: "Active Users in Period", value: totals.todayActiveUsers, icon: FiActivity, tone: "orange" },
+      { label: "New Guests in Period", value: totals.todayGuestUsers, icon: FiUsers, tone: "slate" },
       {
-        label: "Today Top Category News",
+        label: "Top Category News",
         value: topTodayCategory?.newsCount,
         helper: topTodayCategory?.name || "No category news today",
         icon: FiTag,
         tone: "yellow",
       },
       {
-        label: "Today Top City News",
+        label: "Top City News",
         value: topTodayCity?.newsCount,
         helper: topTodayCity?.name || "No city news today",
         icon: FiMapPin,
@@ -380,7 +589,9 @@ const Analytics = () => {
   return (
     <AdminLayout title="Analytics">
       <div className="w-full max-w-full overflow-x-hidden pb-6">
-        <Header activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={fetchAnalytics} />
+        <Header activeTab={activeTab} setActiveTab={setActiveTab} onRefresh={() => fetchAnalytics(appliedFilters)} />
+
+        <AnalyticsFilters filters={filters} setFilters={setFilters} onApply={applyFilters} onReset={resetFilters} loading={loading} />
 
         {loading ? (
           <div className="rounded-[1.5rem] border border-red-100 bg-white p-10 text-center font-bold text-slate-500 shadow-sm">
@@ -395,16 +606,16 @@ const Analytics = () => {
                 </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
-                  <ChartCard title="Today top category news" subtitle="Categories with the highest number of news added today">
+                  <ChartCard title="Top category news" subtitle="Categories with the highest number of news in the selected period">
                     <BarChart items={charts.todayCategoryPerformance || data?.todayTopCategories || []} labelKey="name" valueKey="newsCount" />
                   </ChartCard>
-                  <ChartCard title="Today top city news" subtitle="Cities with the highest number of news added today">
+                  <ChartCard title="Top city news" subtitle="Cities with the highest number of news in the selected period">
                     <BarChart items={charts.todayCityPerformance || data?.todayTopNewsCities || []} labelKey="name" valueKey="newsCount" />
                   </ChartCard>
                 </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
-                  <ChartCard title="Today and recent activity" subtitle="Views, saves and shares trend from recent days">
+                  <ChartCard title="Period interaction activity" subtitle="Views, saves and shares within the selected period">
                     <GroupedTrendChart items={charts.actionTrend} />
                   </ChartCard>
                   <ChartCard title="News publish trend" subtitle="Latest 14 days of news publishing">
@@ -413,12 +624,12 @@ const Analytics = () => {
                 </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
-                  <RankingList title="Today Top Category News" icon={FiTag} items={data?.todayTopCategories} valueKey="newsCount" valueLabel="News" getName={(item) => item.name} getMeta={(item) => `${number(item.views)} views • ${number(item.saves)} saves • ${number(item.shares)} shares`} />
-                  <RankingList title="Today Top City News" icon={FiMapPin} items={data?.todayTopNewsCities} valueKey="newsCount" valueLabel="News" getName={(item) => item.name} getMeta={(item) => `${number(item.views)} views • ${number(item.saves)} saves • ${number(item.shares)} shares`} />
+                  <RankingList title="Top Category News" icon={FiTag} items={data?.todayTopCategories} valueKey="newsCount" valueLabel="News" getName={(item) => item.name} getMeta={(item) => `${number(item.views)} views • ${number(item.saves)} saves • ${number(item.shares)} shares`} />
+                  <RankingList title="Top City News" icon={FiMapPin} items={data?.todayTopNewsCities} valueKey="newsCount" valueLabel="News" getName={(item) => item.name} getMeta={(item) => `${number(item.views)} views • ${number(item.saves)} saves • ${number(item.shares)} shares`} />
                 </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-3">
-                  <RankingList title="Most Viewed Today-Relevant News" icon={FiEye} items={data?.topNewsByViews} valueKey="viewCount" valueLabel="Views" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
+                  <RankingList title="Most Viewed News" icon={FiEye} items={data?.topNewsByViews} valueKey="viewCount" valueLabel="Views" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
                   <RankingList title="Most Saved News" icon={FiBookmark} items={data?.topNewsBySaves} valueKey="saveCount" valueLabel="Saves" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
                   <RankingList title="Most Shared News" icon={FiShare2} items={data?.topNewsByShares} valueKey="shareCount" valueLabel="Shares" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
                 </div>

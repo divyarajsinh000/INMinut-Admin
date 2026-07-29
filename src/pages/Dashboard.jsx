@@ -4,6 +4,12 @@ import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 
+
+const isCanceledRequest = (error) =>
+  error?.code === "ERR_CANCELED" ||
+  error?.name === "CanceledError" ||
+  error?.message === "canceled";
+
 const Dashboard = () => {
   const [totalNews, setTotalNews] = useState(0);
   const [totalCategories, setTotalCategories] = useState(0);
@@ -16,10 +22,30 @@ const Dashboard = () => {
       axiosInstance.get("/guest-users"),
     ]);
 
-    if (newsRes.status === "fulfilled") setTotalNews(newsRes.value.data.data.length);
-    if (categoriesRes.status === "fulfilled") setTotalCategories(categoriesRes.value.data.data.length);
-    if (guestUsersRes.status === "fulfilled") setTotalGuestUsers(guestUsersRes.value.data.data.length);
-    if (newsRes.status === "rejected" || categoriesRes.status === "rejected") toast.error("Failed to load stats");
+    if (newsRes.status === "fulfilled") {
+      setTotalNews(newsRes.value.data.data.length);
+    }
+
+    if (categoriesRes.status === "fulfilled") {
+      setTotalCategories(categoriesRes.value.data.data.length);
+    }
+
+    if (guestUsersRes.status === "fulfilled") {
+      setTotalGuestUsers(guestUsersRes.value.data.data.length);
+    }
+
+    const importantFailures = [newsRes, categoriesRes].filter(
+      (result) =>
+        result.status === "rejected" &&
+        !isCanceledRequest(result.reason)
+    );
+
+    if (importantFailures.length > 0) {
+      toast.error(
+        importantFailures[0]?.reason?.response?.data?.message ||
+          "Failed to load stats"
+      );
+    }
   };
 
   useEffect(() => { fetchStats(); }, []);

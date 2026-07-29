@@ -1,5 +1,5 @@
 import { sanitizeRichText } from "../utils/sanitizeHtml";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
 import AdminLayout from "../components/AdminLayout";
@@ -9,38 +9,48 @@ import MediaSlider from "../components/MediaSlider";
 import QuillEditor from "../components/QuillEditor";
 import ImageCropModal from "../components/ImageCropModal";
 
+const isCanceledRequest = (error) =>
+  error?.code === "ERR_CANCELED" ||
+  error?.name === "CanceledError" ||
+  error?.message === "canceled";
+
+const createInitialForm = () => ({
+  title: "",
+  titleLink: "",
+  titleColor: "#111827",
+  titleFontSize: 22,
+  description: "",
+  descriptionFontSize: 16,
+  media: [],
+  category: "",
+  reporter: { name: "", avatar: "" },
+  hashtags: [""],
+  isBreaking: false,
+  breakingText: "Breaking News",
+  breakingBgColor: "#EF4444",
+  breakingTextColor: "#FFFFFF",
+  isBreakingBlink: false,
+  isActive: true,
+  hideReporter: false,
+  publishedDate: new Date().toISOString().split("T")[0],
+  cities: [],
+});
+
 const EditNews = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const fetchRequestIdRef = useRef(0);
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [newsLoaded, setNewsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [mediaToKeep, setMediaToKeep] = useState([]);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
 
-  const [form, setForm] = useState({
-    title: "",
-    titleLink: "",
-    titleColor: "#111827",
-    titleFontSize: 22,
-    description: "",
-    descriptionFontSize: 16,
-    media: [],
-    category: "",
-    reporter: { name: "", avatar: "" },
-    hashtags: [""],
-    isBreaking: false,
-    breakingText: "Breaking News",
-    breakingBgColor: "#EF4444",
-    breakingTextColor: "#FFFFFF",
-    isBreakingBlink: false,
-    isActive: true,
-    hideReporter: false,
-    publishedDate: new Date().toISOString().split("T")[0],
-    cities: [],
-  });
+  const [form, setForm] = useState(createInitialForm);
 
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [cropFile, setCropFile] = useState(null);
@@ -98,7 +108,9 @@ const EditNews = () => {
       const res = await axiosInstance.get("/categories");
       setCategories(res.data.data);
     } catch (error) {
-      toast.error("Failed to load categories");
+      if (!isCanceledRequest(error)) {
+        toast.error("Failed to load categories");
+      }
     }
   };
 
@@ -107,36 +119,116 @@ const EditNews = () => {
       const res = await axiosInstance.get("/locations/cities");
       setCities(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load cities");
+      if (!isCanceledRequest(error)) {
+        toast.error("Failed to load cities");
+      }
     }
   };
 
-  const fetchNews = async () => {
+  const fetchNews = async (attempt = 0) => {
+    const requestId = ++fetchRequestIdRef.current;
+
     try {
+      setFetching(true);
+      setLoadError("");
+
       const res = await axiosInstance.get(`/news/${id}`);
-      const news = res.data.data;
+      const news = res.data?.data;
+
+      if (requestId !== fetchRequestIdRef.current) return false;
+
+      if (!news) {
+        throw new Error("News data was not found");
+      }
+
+      const safePublishedDate = news.publishedDate
+        ? new Date(news.publishedDate)
+        : new Date();
+
+      const publishedDate = Number.isNaN(safePublishedDate.getTime())
+        ? new Date().toISOString().split("T")[0]
+        : safePublishedDate.toISOString().split("T")[0];
+
+      const normalizedMedia = Array.isArray(news.media)
+        ? news.media.filter(Boolean)
+        : [];
+
+      const normalizedHashtags =
+        Array.isArray(news.hashtags) && news.hashtags.length > 0
+          ? news.hashtags.map((tag) => String(tag ?? ""))
+          : [""];
+
+      const normalizedCities = Array.isArray(news.cities)
+        ? news.cities
+            .map((city) =>
+              typeof city === "string" ? city : city?._id
+            )
+            .filter(Boolean)
+        : [];
+
+      const categoryId =
+        typeof news.category === "string"
+          ? news.category
+          : news.category?._id || "";
+
       setForm({
+        ...createInitialForm(),
         ...news,
-        category: news.category._id,
-        titleLink: news.titleLink || "",
+        title: news.title ?? "",
+        titleLink: news.titleLink ?? "",
         titleColor: news.titleColor || "#111827",
-        titleFontSize: news.titleFontSize || 22,
-        descriptionFontSize: news.descriptionFontSize || 16,
+        titleFontSize: Number(news.titleFontSize) || 22,
+        description: news.description ?? "",
+        descriptionFontSize: Number(news.descriptionFontSize) || 16,
+        category: categoryId,
+        reporter: {
+          name: news.reporter?.name ?? "",
+          avatar: news.reporter?.avatar ?? "",
+        },
+        hashtags: normalizedHashtags,
+        media: normalizedMedia,
+        isBreaking: Boolean(news.isBreaking),
         breakingText: news.breakingText || "Breaking News",
         breakingBgColor: news.breakingBgColor || "#EF4444",
         breakingTextColor: news.breakingTextColor || "#FFFFFF",
-        isBreakingBlink: !!news.isBreakingBlink,
+        isBreakingBlink: Boolean(news.isBreakingBlink),
         isActive: news.isActive !== false,
-        hideReporter: !!news.hideReporter,
-        publishedDate: new Date(news.publishedDate).toISOString().split("T")[0],
-        hashtags: news.hashtags.length > 0 ? news.hashtags : [""],
-        cities: news.cities?.map((city) => city._id) || [],
+        hideReporter: Boolean(news.hideReporter),
+        publishedDate,
+        cities: normalizedCities,
       });
-      setMediaToKeep(news.media.map(m => m._id));
-    } catch (error) {
-      toast.error("Failed to load news");
-    } finally {
+
+      setMediaToKeep(
+        normalizedMedia
+          .map((mediaItem) => mediaItem?._id)
+          .filter(Boolean)
+      );
+
+      setSelectedFiles([]);
+      setNewsLoaded(true);
       setFetching(false);
+      return true;
+    } catch (error) {
+      if (requestId !== fetchRequestIdRef.current) return false;
+
+      if (isCanceledRequest(error) && attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        return fetchNews(attempt + 1);
+      }
+
+      if (!isCanceledRequest(error)) {
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to load news";
+
+        setLoadError(message);
+        toast.error(message);
+      }
+
+      // Never reveal the blank initial form when the detail request failed.
+      setFetching(false);
+      return false;
     }
   };
 
@@ -277,7 +369,7 @@ const EditNews = () => {
       formData.append('description', form.description);
       formData.append('descriptionFontSize', form.descriptionFontSize || 16);
       formData.append('category', form.category);
-      formData.append('hashtags', JSON.stringify(form.hashtags.filter((tag) => tag.trim())));
+      formData.append('hashtags', JSON.stringify((form.hashtags || []).filter((tag) => String(tag).trim())));
       formData.append('isBreaking', form.isBreaking);
       formData.append('breakingText', form.breakingText || 'Breaking News');
       formData.append('breakingBgColor', form.breakingBgColor || '#EF4444');
@@ -309,15 +401,56 @@ const EditNews = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
-    fetchCities();
-    fetchNews();
+    let active = true;
+
+    const loadEditScreen = async () => {
+      const loaded = await fetchNews();
+
+      if (!active || !loaded) return;
+
+      // Load dropdown masters only after the news record is safely stored.
+      // This avoids custom Axios cancellation logic clearing/canceling detail data.
+      await fetchCategories();
+
+      if (!active) return;
+
+      await fetchCities();
+    };
+
+    loadEditScreen();
+
+    return () => {
+      active = false;
+      fetchRequestIdRef.current += 1;
+    };
   }, [id]);
 
-  if (fetching) {
+  if (fetching || !newsLoaded) {
     return (
-      <AdminLayout title="Loading">
-        <p className="text-center text-slate-500 py-10 font-bold">Loading...</p>
+      <AdminLayout title={loadError ? "Unable to load news" : "Loading"}>
+        <div className="mx-auto max-w-xl rounded-2xl border bg-white p-8 text-center shadow-sm">
+          {loadError ? (
+            <>
+              <p className="font-black text-red-600">{loadError}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                The edit form was not opened because the news data was not loaded.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoadError("");
+                  setFetching(true);
+                  fetchNews();
+                }}
+                className="mt-5 rounded-xl bg-red-500 px-5 py-3 font-black text-white hover:bg-red-600"
+              >
+                Retry loading news
+              </button>
+            </>
+          ) : (
+            <p className="py-3 font-bold text-slate-500">Loading news data...</p>
+          )}
+        </div>
       </AdminLayout>
     );
   }
@@ -501,7 +634,7 @@ const EditNews = () => {
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   Hashtags
                 </label>
-                {form.hashtags.map((tag, i) => (
+                {(form.hashtags || [""]).map((tag, i) => (
                   <div key={i} className="flex gap-2 mb-2">
                     <input
                       value={tag}

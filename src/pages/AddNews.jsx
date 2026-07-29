@@ -10,6 +10,12 @@ import MediaSlider from "../components/MediaSlider";
 import QuillEditor from "../components/QuillEditor";
 import ImageCropModal from "../components/ImageCropModal";
 
+
+const isCanceledRequest = (error) =>
+  error?.code === "ERR_CANCELED" ||
+  error?.name === "CanceledError" ||
+  error?.message === "canceled";
+
 const AddNews = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -64,7 +70,9 @@ const AddNews = () => {
       const res = await axiosInstance.get("/categories");
       setCategories(res.data.data);
     } catch (error) {
-      toast.error("Failed to load categories");
+      if (!isCanceledRequest(error)) {
+        toast.error("Failed to load categories");
+      }
     }
   };
 
@@ -73,7 +81,9 @@ const AddNews = () => {
       const res = await axiosInstance.get("/locations/cities");
       setCities(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load cities");
+      if (!isCanceledRequest(error)) {
+        toast.error("Failed to load cities");
+      }
     }
   };
 
@@ -255,7 +265,9 @@ const AddNews = () => {
             imgUrlToFetch = getFullMediaUrl(defaultNewsImage);
           }
         } catch (setErr) {
-          console.error("Failed to fetch settings for default image", setErr);
+          if (!isCanceledRequest(setErr)) {
+            console.error("Failed to fetch settings for default image", setErr);
+          }
         }
 
         const response = await fetch(imgUrlToFetch);
@@ -265,7 +277,9 @@ const AddNews = () => {
           setSelectedFiles([file]);
         }
       } catch (err) {
-        console.error("Failed to preload default image", err);
+        if (err?.name !== "AbortError" && !isCanceledRequest(err)) {
+          console.error("Failed to preload default image", err);
+        }
       }
     };
     preloadDefaultImage();

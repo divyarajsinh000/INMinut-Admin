@@ -33,6 +33,12 @@ const FILTERS = [
 const getPrimaryMedia = (item) => (Array.isArray(item?.media) && item.media.length > 0 ? item.media[0] : null);
 const stripHtml = (html) => (html || "").replace(/<[^>]*>?/gm, "").replace(/&nbsp;/g, " ").trim();
 
+const isCanceledRequest = (error) =>
+  error?.code === "ERR_CANCELED" ||
+  error?.name === "CanceledError" ||
+  error?.message === "canceled";
+
+
 const NewsList = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,7 +97,9 @@ const NewsList = () => {
         });
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load news");
+      if (!isCanceledRequest(error)) {
+        toast.error(error?.response?.data?.message || "Failed to load news");
+      }
     } finally {
       setLoading(false);
     }

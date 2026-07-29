@@ -36,6 +36,7 @@ const getDevices = (item) => {
 const GuestUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingDeviceKey, setUpdatingDeviceKey] = useState("");
 
   const deviceRows = useMemo(() => {
     return users.flatMap((user) => {
@@ -80,6 +81,74 @@ const GuestUsers = () => {
     }
   };
 
+
+  const updateDeviceNotificationState = async (userId, device, enabled) => {
+    if (!device?.deviceId && !device?._id) {
+      toast.error("This old device does not have a usable device ID");
+      return;
+    }
+
+    const deviceIdentifier = device.deviceId || device._id;
+    const requestKey = `${userId}-${deviceIdentifier}`;
+
+    try {
+      setUpdatingDeviceKey(requestKey);
+
+      await axiosInstance.patch(
+        `/guest-users/${userId}/devices/${encodeURIComponent(deviceIdentifier)}/notifications`,
+        { enabled }
+      );
+
+      setUsers((currentUsers) =>
+        currentUsers.map((currentUser) => {
+          if (currentUser._id !== userId) return currentUser;
+
+          const updatedDevices = Array.isArray(currentUser.devices)
+            ? currentUser.devices.map((currentDevice) => {
+                const matches =
+                  currentDevice.deviceId === deviceIdentifier ||
+                  currentDevice._id === deviceIdentifier;
+
+                return matches
+                  ? { ...currentDevice, notificationsEnabled: enabled }
+                  : currentDevice;
+              })
+            : currentUser.devices;
+
+          return {
+            ...currentUser,
+            devices: updatedDevices,
+            notificationsEnabled: Array.isArray(updatedDevices)
+              ? updatedDevices.some((item) => item.notificationsEnabled !== false)
+              : enabled,
+          };
+        })
+      );
+
+      toast.success(enabled ? "Notifications enabled by admin" : "Notifications disabled by admin");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update notification access");
+    } finally {
+      setUpdatingDeviceKey("");
+    }
+  };
+
+  const updateAllNotifications = async (enabled) => {
+    const label = enabled ? "enable" : "disable";
+    if (!window.confirm(`Are you sure you want to ${label} notifications for all registered devices?`)) return;
+
+    try {
+      setUpdatingDeviceKey("all-devices");
+      await axiosInstance.patch("/guest-users/notifications/bulk", { enabled });
+      toast.success(`Notifications ${enabled ? "enabled" : "disabled"} for all devices`);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update all devices");
+    } finally {
+      setUpdatingDeviceKey("");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -102,9 +171,25 @@ const GuestUsers = () => {
             </p>
           </div>
         </div>
-        <button onClick={fetchUsers} className="relative z-10 inline-flex items-center gap-2 px-4 py-3 bg-white text-slate-950 rounded-2xl font-black hover:bg-red-50">
-          <FiRefreshCw />Refresh
-        </button>
+        <div className="relative z-10 flex flex-wrap justify-end gap-2">
+          <button
+            onClick={() => updateAllNotifications(true)}
+            disabled={updatingDeviceKey === "all-devices"}
+            className="inline-flex items-center gap-2 px-4 py-3 bg-emerald-500 text-white rounded-2xl font-black hover:bg-emerald-600 disabled:opacity-60"
+          >
+            <FiBell /> Enable all
+          </button>
+          <button
+            onClick={() => updateAllNotifications(false)}
+            disabled={updatingDeviceKey === "all-devices"}
+            className="inline-flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-2xl font-black hover:bg-red-600 disabled:opacity-60"
+          >
+            <FiBellOff /> Disable all
+          </button>
+          <button onClick={fetchUsers} className="inline-flex items-center gap-2 px-4 py-3 bg-white text-slate-950 rounded-2xl font-black hover:bg-red-50">
+            <FiRefreshCw /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="bg-white/90 rounded-[1.6rem] shadow-sm border border-red-100 overflow-hidden">
@@ -153,10 +238,37 @@ const GuestUsers = () => {
                       {user.cityPreferences?.length ? user.cityPreferences.map((city) => city.name).join(", ") : "All cities / no preference"}
                     </td>
                     <td className="p-4">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black ${device?.notificationsEnabled !== false ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {device?.notificationsEnabled !== false ? <FiBell /> : <FiBellOff />}
-                        {device?.notificationsEnabled !== false ? "Enabled" : "Disabled"}
-                      </span>
+                      {device ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateDeviceNotificationState(
+                              user._id,
+                              device,
+                              device.notificationsEnabled === false
+                            )
+                          }
+                          disabled={
+                            updatingDeviceKey ===
+                            `${user._id}-${device.deviceId || device._id}`
+                          }
+                          className={`inline-flex min-w-[118px] items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            device.notificationsEnabled !== false
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                          }`}
+                          title="Click to let admin enable or disable notifications for this device"
+                        >
+                          {device.notificationsEnabled !== false ? <FiBell /> : <FiBellOff />}
+                          {updatingDeviceKey === `${user._id}-${device.deviceId || device._id}`
+                            ? "Updating..."
+                            : device.notificationsEnabled !== false
+                            ? "Enabled"
+                            : "Disabled"}
+                        </button>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-400">No device</span>
+                      )}
                     </td>
                     <td className="p-4 text-slate-500 font-semibold">{formatDateTime(device?.lastSeenAt || user.lastSeenAt)}</td>
                     <td className="p-4 text-right">
