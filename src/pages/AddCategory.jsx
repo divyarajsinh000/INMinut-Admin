@@ -11,6 +11,7 @@ const AddCategory = () => {
     name: "",
     backgroundColor: "#FF6B35",
     textColor: "#FFFFFF",
+    isHighlighted: false,
   });
 
   const handleChange = (e) => {
@@ -100,6 +101,20 @@ const AddCategory = () => {
                   />
                 </div>
               </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 cursor-pointer">
+                <input
+                  name="isHighlighted"
+                  type="checkbox"
+                  checked={form.isHighlighted}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isHighlighted: e.target.checked }))}
+                  className="h-5 w-5 accent-amber-500"
+                />
+                <span>
+                  <span className="block text-sm font-bold text-slate-800">Highlight / Blink this category</span>
+                  <span className="block text-xs text-slate-600 mt-1">It will pulse in the mobile app to draw attention.</span>
+                </span>
+              </label>
 
               <div className="flex gap-3">
                 <button

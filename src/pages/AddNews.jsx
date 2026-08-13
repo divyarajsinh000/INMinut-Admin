@@ -59,7 +59,7 @@ const AddNews = () => {
     breakingBgColor: "#EF4444",
     breakingTextColor: "#FFFFFF",
     isBreakingBlink: false,
-    isActive: true,
+    isActive: false,
     hideReporter: false,
     publishedDate: new Date().toISOString().split("T")[0],
     cities: [],

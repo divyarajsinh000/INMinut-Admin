@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
-import { FiPlus, FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiEdit, FiTrash2, FiZap } from "react-icons/fi";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
@@ -108,6 +108,11 @@ const CategoryList = () => {
                       <h3 className="text-xl font-bold text-slate-900 mb-1">
                         {cat.name}
                       </h3>
+                      {cat.isHighlighted && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-800">
+                          <FiZap /> Highlighted
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-2 pointer-events-auto">
                       <Link

@@ -28,9 +28,19 @@ const QuillEditor = ({ value, onChange }) => {
           [{ header: [1, 2, false] }],
           ["bold", "italic", "underline", "strike"],
           [{ list: "ordered" }, { list: "bullet" }],
+          ["link"],
           ["clean"],
         ],
       },
+      formats: [
+        "header",
+        "bold",
+        "italic",
+        "underline",
+        "strike",
+        "list",
+        "link",
+      ],
     });
 
     quillRef.current = quill;

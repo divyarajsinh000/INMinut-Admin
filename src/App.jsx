@@ -198,7 +198,7 @@ function App() {
           <Route
             path="/embeds"
             element={
-              <ProtectedRoute roles={["super-admin"]}>
+              <ProtectedRoute roles={["super-admin", "editor"]}>
                 <EmbedList />
               </ProtectedRoute>
             }
@@ -207,7 +207,7 @@ function App() {
           <Route
             path="/embeds/add"
             element={
-              <ProtectedRoute roles={["super-admin"]}>
+              <ProtectedRoute roles={["super-admin", "editor"]}>
                 <AddEmbed />
               </ProtectedRoute>
             }
@@ -216,7 +216,7 @@ function App() {
           <Route
             path="/embeds/edit/:id"
             element={
-              <ProtectedRoute roles={["super-admin"]}>
+              <ProtectedRoute roles={["super-admin", "editor"]}>
                 <EditEmbed />
               </ProtectedRoute>
             }

@@ -24,6 +24,25 @@ export const getFullMediaUrl = (url) => {
 
 const getExtension = (name = "") => name.split(".").pop()?.toLowerCase() || "";
 
+const repairMojibakeName = (value = "") => {
+  if (!value) return value;
+
+  const name = String(value).trim();
+  if (!/[ÃÂÊËÎÏÔÛâãäåçèéêëìíîïñòóôõöùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßª«»¼½¾…]/.test(name)) {
+    return name;
+  }
+
+  try {
+    const latin1Bytes = Uint8Array.from(
+      [...name].map((char) => char.charCodeAt(0) & 0xff)
+    );
+    const repaired = new TextDecoder("utf-8").decode(latin1Bytes);
+    return repaired && repaired !== name ? repaired : name;
+  } catch {
+    return name;
+  }
+};
+
 export const getMediaType = (media = {}) => {
   const explicitType = media.type || media.mediaType;
   if (["image", "video", "pdf"].includes(explicitType)) return explicitType;
@@ -88,11 +107,13 @@ const MediaPreview = ({
       url: getFullMediaUrl(mediaUrl),
       type: fallback.type || getMediaType(mediaObject),
       name:
-        fallback.name ||
-        mediaObject.originalName ||
-        mediaObject.name ||
-        mediaObject.filename ||
-        "Media file",
+        repairMojibakeName(
+          fallback.name ||
+            mediaObject.originalName ||
+            mediaObject.name ||
+            mediaObject.filename ||
+            "Media file"
+        ),
     };
   };
 

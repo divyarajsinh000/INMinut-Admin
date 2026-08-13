@@ -62,6 +62,10 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
     { to: "/settings", icon: FiSettings, label: "Settings" },
   ];
 
+  const editorItems = [
+    { to: "/embeds", icon: FiCode, label: "Embed Codes" },
+  ];
+
   return (
     <aside
       className={`fixed left-0 top-0 z-40 flex h-screen w-72 flex-col overflow-hidden border-r border-white/10 bg-slate-950 text-white shadow-2xl shadow-slate-950/25 transition-transform duration-300 lg:translate-x-0 ${
@@ -114,7 +118,7 @@ const Sidebar = ({ open = false, onClose = () => {} }) => {
       </div>
 
       <nav className="relative z-10 flex-1 space-y-2 overflow-y-auto px-4 pb-4">
-        {[...navItems, ...(user?.role === "super-admin" ? superAdminItems : [])].map((item) => {
+        {[...navItems, ...(user?.role === "super-admin" ? superAdminItems : user?.role === "editor" ? editorItems : [])].map((item) => {
           const Icon = item.icon;
           return (
             <Link key={item.to} to={item.to} onClick={onClose} className={linkClass(item.to)}>

@@ -31,17 +31,6 @@ const axiosInstance = axios.create({
   },
 });
 
-const pendingRequests = new Map();
-
-const getRequestKey = (config) => {
-  return [
-    config.method,
-    config.url,
-    JSON.stringify(config.params || {}),
-    JSON.stringify(config.data || {})
-  ].join("&");
-};
-
 axiosInstance.interceptors.request.use((config) => {
   config.url = normalizeRequestPath(config.url);
 
@@ -50,32 +39,13 @@ axiosInstance.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  const requestKey = getRequestKey(config);
-  if (pendingRequests.has(requestKey)) {
-    const controller = new AbortController();
-    config.signal = controller.signal;
-    controller.abort("Duplicate request canceled");
-  } else {
-    config.requestKey = requestKey;
-    pendingRequests.set(requestKey, true);
-  }
-
   return config;
 });
 
 axiosInstance.interceptors.response.use(
-  (response) => {
-    if (response.config && response.config.requestKey) {
-      pendingRequests.delete(response.config.requestKey);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.config && error.config.requestKey) {
-      pendingRequests.delete(error.config.requestKey);
-    }
-
-    if (axios.isCancel(error)) {
+    if (axios.isCancel(error) || error?.code === "ERR_CANCELED" || error?.message === "canceled") {
       return Promise.reject(error);
     }
 
