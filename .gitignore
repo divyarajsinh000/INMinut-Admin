@@ -3,11 +3,18 @@ node_modules/
 dist/
 dist-ssr/
 
-# Environment files (commit only the safe example)
+# Environment files (commit only the safe example template)
 .env
 .env.*
 !.env.example
 *.local
+
+# Secrets and Keys
+*.pem
+*.key
+*.jks
+credentials.json
+google-services.json
 
 # Logs
 logs/
@@ -17,14 +24,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Local tooling and operating system files
+# Tooling & OS files
 .expo/
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
