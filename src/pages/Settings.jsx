@@ -35,7 +35,7 @@ const Settings = () => {
         setSettings(res.data.settings);
       }
     } catch (error) {
-      toast.error("Failed to load settings");
+      toast.error(error?.response?.data?.message || "Failed to load settings");
     } finally {
       setLoading(false);
     }

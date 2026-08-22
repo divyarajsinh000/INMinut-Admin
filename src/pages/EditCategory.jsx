@@ -22,7 +22,7 @@ const EditCategory = () => {
       const cat = res.data.data.find((c) => c._id === id);
       if (cat) setForm(cat);
     } catch (error) {
-      toast.error("Failed to load category");
+      toast.error(error?.response?.data?.message || "Failed to load category");
     } finally {
       setFetching(false);
     }

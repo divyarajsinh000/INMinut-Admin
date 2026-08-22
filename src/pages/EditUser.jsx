@@ -26,7 +26,7 @@ const EditUser = () => {
         password: "",
       });
     } catch (error) {
-      toast.error("Failed to load user");
+      toast.error(error?.response?.data?.message || "Failed to load user");
     } finally {
       setFetching(false);
     }

@@ -22,7 +22,7 @@ const AdvertisementList = () => {
       const res = await axiosInstance.get("/advertisements?sort=recent");
       setAdvertisements(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load advertisements");
+      toast.error(error?.response?.data?.message || "Failed to load advertisements");
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ const AdvertisementList = () => {
       toast.success("Advertisement status updated");
       fetchAdvertisements();
     } catch (error) {
-      toast.error("Failed to update advertisement status");
+      toast.error(error?.response?.data?.message || "Failed to update advertisement status");
     }
   };
 

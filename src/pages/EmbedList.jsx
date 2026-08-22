@@ -16,7 +16,7 @@ const EmbedList = () => {
       const res = await axiosInstance.get("/embeds?sort=recent");
       setEmbeds(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load embeds");
+      toast.error(error?.response?.data?.message || "Failed to load embeds");
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ const EmbedList = () => {
       toast.success("Embed status updated");
       fetchEmbeds();
     } catch (error) {
-      toast.error("Failed to update embed status");
+      toast.error(error?.response?.data?.message || "Failed to update embed status");
     }
   };
 

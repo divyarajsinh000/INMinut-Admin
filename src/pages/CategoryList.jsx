@@ -15,7 +15,7 @@ const CategoryList = () => {
       const res = await axiosInstance.get("/categories");
       setCategories(res.data.data);
     } catch (error) {
-      toast.error("Failed to load categories");
+      toast.error(error?.response?.data?.message || "Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ const CategoryList = () => {
       toast.success("Category deleted");
       fetchCategories();
     } catch (error) {
-      toast.error("Failed to delete category");
+      toast.error(error?.response?.data?.message || "Failed to delete category");
     }
   };
 

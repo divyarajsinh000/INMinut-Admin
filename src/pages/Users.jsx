@@ -16,7 +16,7 @@ const Users = () => {
       const res = await axiosInstance.get("/admin");
       setUsers(res.data.data);
     } catch (error) {
-      toast.error("Failed to load users");
+      toast.error(error?.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }

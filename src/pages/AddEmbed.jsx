@@ -11,7 +11,7 @@ const getPreviewUrl = (value = "") => {
     return "";
   }
 
-  const youtubeMatch = trimmed.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i);
+  const youtubeMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([^"&?/\s]{11})/i);
   return youtubeMatch?.[1]
     ? `https://www.youtube.com/embed/${youtubeMatch[1]}`
     : trimmed;

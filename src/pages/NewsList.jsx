@@ -119,7 +119,7 @@ const NewsList = () => {
       toast.success("News deleted");
       fetchNews(sortBy, searchQuery);
     } catch (error) {
-      toast.error("Failed to delete news");
+      toast.error(error?.response?.data?.message || "Failed to delete news");
     }
   };
 
@@ -130,7 +130,7 @@ const NewsList = () => {
       toast.success("News pin status updated");
       fetchNews(sortBy, searchQuery);
     } catch (error) {
-      toast.error("Failed to update pin status");
+      toast.error(error?.response?.data?.message || "Failed to update pin status");
     }
   };
 
@@ -165,7 +165,7 @@ const NewsList = () => {
       toast.success("News order updated");
       fetchNews(sortBy, searchQuery);
     } catch (error) {
-      toast.error("Failed to save news order");
+      toast.error(error?.response?.data?.message || "Failed to save news order");
     } finally {
       setSavingOrder(false);
     }

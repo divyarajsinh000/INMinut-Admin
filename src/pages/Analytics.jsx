@@ -491,7 +491,7 @@ const Analytics = () => {
       const response = await axiosInstance.get("/news/analytics/dashboard", { params });
       setData(response.data.data);
     } catch (error) {
-      toast.error("Failed to load analytics");
+      toast.error(error?.response?.data?.message || "Failed to load analytics");
     } finally {
       setLoading(false);
     }

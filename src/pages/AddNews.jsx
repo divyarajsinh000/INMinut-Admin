@@ -71,7 +71,7 @@ const AddNews = () => {
       setCategories(res.data.data);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error("Failed to load categories");
+        toast.error(error?.response?.data?.message || "Failed to load categories");
       }
     }
   };
@@ -82,7 +82,7 @@ const AddNews = () => {
       setCities(res.data.data || []);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error("Failed to load cities");
+        toast.error(error?.response?.data?.message || "Failed to load cities");
       }
     }
   };

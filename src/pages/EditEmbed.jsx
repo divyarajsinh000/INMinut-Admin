@@ -26,7 +26,7 @@ const normalizeEmbedUrl = (value = "") => {
 
   // YouTube watch, share and Shorts URLs.
   const youtubeMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?.*?[?&]v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([^"&?/\s]{11})/i
   );
   if (youtubeMatch?.[1]) {
     return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
@@ -225,7 +225,7 @@ const EditEmbed = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to load embed details");
+      toast.error(error?.response?.data?.message || "Failed to load embed details");
       navigate("/embeds");
     } finally {
       setFetching(false);

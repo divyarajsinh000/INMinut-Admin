@@ -46,7 +46,7 @@ const EditAdvertisement = () => {
       const res = await axiosInstance.get("/locations/cities");
       setCities(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load cities");
+      toast.error(error?.response?.data?.message || "Failed to load cities");
     }
   };
 
@@ -55,7 +55,7 @@ const EditAdvertisement = () => {
       const res = await axiosInstance.get("/categories");
       setCategories(res.data.data || []);
     } catch (error) {
-      toast.error("Failed to load categories");
+      toast.error(error?.response?.data?.message || "Failed to load categories");
     }
   };
 
@@ -75,7 +75,7 @@ const EditAdvertisement = () => {
       });
       setPreview(getImageUrl(ad.bannerImage));
     } catch (error) {
-      toast.error("Failed to load advertisement");
+      toast.error(error?.response?.data?.message || "Failed to load advertisement");
     } finally {
       setFetching(false);
     }
