@@ -16,6 +16,7 @@ const Profile = () => {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    currentPassword: "",
     password: "",
   });
 
@@ -24,6 +25,7 @@ const Profile = () => {
       setForm({
         name: user.name || "",
         email: user.email || "",
+        currentPassword: "",
         password: "",
       });
       if (user.profileImage) {
@@ -76,11 +78,32 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (form.password) {
+      if (!form.currentPassword) {
+        toast.error("Current password is required to set a new password");
+        return;
+      }
+      if (
+        form.password.length < 8 ||
+        !/[a-zA-Z]/.test(form.password) ||
+        !/[0-9]/.test(form.password)
+      ) {
+        toast.error(
+          "New password must be at least 8 characters long and contain both letters and numbers"
+        );
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       const formData = new FormData();
       formData.append("name", form.name);
       formData.append("email", form.email);
+      if (form.currentPassword) {
+        formData.append("currentPassword", form.currentPassword);
+      }
       if (form.password) {
         formData.append("password", form.password);
       }
@@ -95,7 +118,7 @@ const Profile = () => {
       });
 
       setUser(res.data.data);
-      setForm((prev) => ({ ...prev, password: "" }));
+      setForm((prev) => ({ ...prev, password: "", currentPassword: "" }));
       setSelectedFile(null);
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -184,31 +207,51 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                    <FiShield size={16} className="text-slate-400" />
-                    Account Role
-                  </label>
-                  <div className="w-full bg-slate-50 border border-slate-200 text-slate-500 rounded-xl px-4 py-3 font-semibold uppercase tracking-wider text-xs flex items-center select-none">
-                    {user?.role || "editor"}
-                  </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <FiShield size={16} className="text-slate-400" />
+                  Account Role
+                </label>
+                <div className="w-full bg-slate-50 border border-slate-200 text-slate-500 rounded-xl px-4 py-3 font-semibold uppercase tracking-wider text-xs flex items-center select-none">
+                  {user?.role || "editor"}
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                    <FiKey size={16} className="text-slate-400" />
-                    New Password
-                  </label>
-                  <input
-                    name="password"
-                    type="password"
-                    placeholder="Leave blank to keep current"
-                    value={form.password}
-                    onChange={handleChange}
-                    minLength={6}
-                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
-                  />
+              <div className="pt-4 border-t border-slate-100">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+                  Change Password (Optional)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <FiKey size={16} className="text-slate-400" />
+                      Current Password
+                    </label>
+                    <input
+                      name="currentPassword"
+                      type="password"
+                      placeholder="Required to set new password"
+                      value={form.currentPassword}
+                      onChange={handleChange}
+                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <FiKey size={16} className="text-slate-400" />
+                      New Password
+                    </label>
+                    <input
+                      name="password"
+                      type="password"
+                      placeholder="Min 8 chars (letters & numbers)"
+                      value={form.password}
+                      onChange={handleChange}
+                      minLength={8}
+                      className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
                 </div>
               </div>
 

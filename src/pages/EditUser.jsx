@@ -105,9 +105,10 @@ const EditUser = () => {
                 <input
                   name="password"
                   type="password"
+                  placeholder="Min 8 chars (letters & numbers)"
                   value={form.password}
                   onChange={handleChange}
-                  minLength={6}
+                  minLength={8}
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
