@@ -1,7 +1,7 @@
 import { sanitizeRichText } from "../utils/sanitizeHtml";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
+import MediaPreview, { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
 import { useAuth } from "../context/AuthContext";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
@@ -30,6 +30,20 @@ const AddNews = () => {
 
   const videos = selectedFiles.filter(file => getMediaType(file) === "video");
   const pdfs = selectedFiles.filter(file => getMediaType(file) === "pdf");
+  const [videoPreviewUrls, setVideoPreviewUrls] = useState([]);
+
+  useEffect(() => {
+    const urls = videos.map((video) => ({
+      file: video,
+      url: URL.createObjectURL(video),
+    }));
+
+    setVideoPreviewUrls(urls);
+
+    return () => {
+      urls.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, [selectedFiles]);
 
   useEffect(() => {
     const newImgFile = selectedFiles.find(file => {
@@ -778,13 +792,17 @@ const AddNews = () => {
                     )}
                   </div>
 
-                  {videos.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      {videos.map((video, index) => (
-                        <div key={`video-${index}`} className="relative flex h-40 items-center justify-center overflow-hidden rounded-[18px] bg-slate-900 text-white">
-                          <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[10px] font-black uppercase">Video</span>
-                          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/20 text-xl">▶</span>
-                          <span className="absolute bottom-3 left-3 right-3 truncate text-[11px] font-bold text-slate-200">{video.name || 'Video attachment'}</span>
+                  {videoPreviewUrls.length > 0 && (
+                    <div className="mb-3 space-y-3">
+                      {videoPreviewUrls.map(({ file, url }, index) => (
+                        <div key={`video-${index}-${file.name}`} className="overflow-hidden rounded-[18px] bg-black">
+                          <MediaPreview
+                            media={file}
+                            src={url}
+                            type="video"
+                            name={file?.name || "Video attachment"}
+                            className="h-[360px]"
+                          />
                         </div>
                       ))}
                     </div>

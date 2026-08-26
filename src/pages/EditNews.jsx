@@ -1,7 +1,7 @@
 import { sanitizeRichText } from "../utils/sanitizeHtml";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
+import MediaPreview, { getFullMediaUrl, getMediaType } from "../components/MediaPreview";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -34,6 +34,7 @@ const createInitialForm = () => ({
   hideReporter: false,
   publishedDate: new Date().toISOString().split("T")[0],
   cities: [],
+  sendNotification: true,
 });
 
 const EditNews = () => {
@@ -63,6 +64,36 @@ const EditNews = () => {
   const videos = [
     ...keptVideos.map(v => ({ name: v.originalName || v.url.split("/").pop() })),
     ...selectedVideos.map(v => ({ name: v.name }))
+  ];
+
+  const [selectedVideoPreviewUrls, setSelectedVideoPreviewUrls] = useState([]);
+
+  useEffect(() => {
+    const urls = selectedVideos.map((video) => ({
+      file: video,
+      url: URL.createObjectURL(video),
+    }));
+
+    setSelectedVideoPreviewUrls(urls);
+
+    return () => {
+      urls.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, [selectedFiles]);
+
+  const livePreviewVideos = [
+    ...keptVideos.map((video) => ({
+      key: `existing-${video._id}`,
+      media: video,
+      url: getFullMediaUrl(video.url),
+      name: video.originalName || video.url?.split("/").pop() || "Video attachment",
+    })),
+    ...selectedVideoPreviewUrls.map(({ file, url }, index) => ({
+      key: `new-${index}-${file.name}`,
+      media: file,
+      url,
+      name: file.name || "Video attachment",
+    })),
   ];
 
   const keptPdfs = form.media
@@ -196,6 +227,7 @@ const EditNews = () => {
         hideReporter: Boolean(news.hideReporter),
         publishedDate,
         cities: normalizedCities,
+        sendNotification: true,
       });
 
       setMediaToKeep(
@@ -380,6 +412,7 @@ const EditNews = () => {
       formData.append('publishedDate', form.publishedDate);
       formData.append('cities', JSON.stringify(form.cities || []));
       formData.append('mediaToKeep', JSON.stringify(mediaToKeep));
+      formData.append('sendNotification', form.sendNotification);
       
       selectedFiles.forEach(file => {
         formData.append('media', file);
@@ -757,6 +790,25 @@ const EditNews = () => {
                 )}
               </div>
 
+              <div className="flex items-center justify-between rounded-2xl border border-red-100 bg-red-50/50 p-4">
+                <div className="pr-4">
+                  <p className="font-bold text-slate-800">Send Notification For This Edit</p>
+                  <p className="text-xs text-slate-500">
+                    Checked by default. Uncheck it to update this news without sending a push notification.
+                  </p>
+                </div>
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
+                  <input
+                    name="sendNotification"
+                    type="checkbox"
+                    checked={form.sendNotification}
+                    onChange={handleChange}
+                    className="h-5 w-5 accent-red-500"
+                  />
+                  {form.sendNotification ? "Send" : "Don't send"}
+                </label>
+              </div>
+
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
                 <div>
                   <p className="font-bold text-slate-800">Display News In App</p>
@@ -961,13 +1013,17 @@ const EditNews = () => {
                     )}
                   </div>
 
-                  {videos.length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      {videos.map((video, index) => (
-                        <div key={`video-${index}`} className="relative flex h-40 items-center justify-center overflow-hidden rounded-[18px] bg-slate-900 text-white">
-                          <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[10px] font-black uppercase">Video</span>
-                          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/20 text-xl">▶</span>
-                          <span className="absolute bottom-3 left-3 right-3 truncate text-[11px] font-bold text-slate-200">{video.name || 'Video attachment'}</span>
+                  {livePreviewVideos.length > 0 && (
+                    <div className="mb-3 space-y-3">
+                      {livePreviewVideos.map((video) => (
+                        <div key={video.key} className="overflow-hidden rounded-[18px] bg-black">
+                          <MediaPreview
+                            media={video.media}
+                            src={video.url}
+                            type="video"
+                            name={video.name}
+                            className="h-[360px]"
+                          />
                         </div>
                       ))}
                     </div>

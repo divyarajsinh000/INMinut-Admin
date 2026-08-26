@@ -16,12 +16,11 @@ import {
   FiShare2,
   FiBarChart2,
   FiX,
-  FiPower,
   FiExternalLink,
   FiHeart,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import MediaPreview from "../components/MediaPreview";
+import MediaPreview, { getMediaType } from "../components/MediaPreview";
 
 const FILTERS = [
   { key: "manual", label: "Manual / pinned", helper: "All news" },
@@ -134,8 +133,21 @@ const NewsList = () => {
     }
   };
 
-  const toggleActive = async (id) => {
+  const toggleActive = async (item) => {
     if (isReporter || togglingActiveId) return;
+
+    const isCurrentlyActive = item?.isActive !== false;
+    if (
+      isCurrentlyActive &&
+      !window.confirm(
+        "Are you sure you want to turn this news off? It will be hidden from the public app."
+      )
+    ) {
+      return;
+    }
+
+    const id = item._id;
+
     try {
       setTogglingActiveId(id);
       const res = await axiosInstance.patch(`/news/${id}/toggle-active`);
@@ -331,7 +343,11 @@ const NewsList = () => {
                       mediaItems={item.media}
                       compact
                       showName
-                      className="h-44 xl:h-40"
+                      className={
+                        getMediaType(getPrimaryMedia(item)) === "video"
+                          ? "h-64 xl:h-56"
+                          : "h-44 xl:h-40"
+                      }
                     />
                   ) : (
                     <div className="flex h-44 w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-black text-slate-400 xl:h-40">
@@ -425,14 +441,28 @@ const NewsList = () => {
                   {!isReporter && (
                     <button
                       type="button"
-                      onClick={() => toggleActive(item._id)}
+                      role="switch"
+                      aria-checked={item.isActive !== false}
+                      aria-label={item.isActive === false ? "Turn news on" : "Turn news off"}
+                      onClick={() => toggleActive(item)}
                       disabled={togglingActiveId === item._id}
-                      className={`rounded-2xl p-3 transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                        item.isActive === false ? "bg-slate-200 hover:bg-slate-300" : "bg-emerald-50 hover:bg-emerald-100"
-                      }`}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       title={item.isActive === false ? "Turn news on" : "Turn news off"}
                     >
-                      <FiPower className={item.isActive === false ? "text-slate-600" : "text-emerald-600"} />
+                      <span
+                        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
+                          item.isActive === false ? "bg-slate-300" : "bg-emerald-500"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                            item.isActive === false ? "translate-x-0.5" : "translate-x-[22px]"
+                          }`}
+                        />
+                      </span>
+                      <span className={`text-xs font-black ${item.isActive === false ? "text-slate-500" : "text-emerald-700"}`}>
+                        {togglingActiveId === item._id ? "Saving..." : item.isActive === false ? "Off" : "On"}
+                      </span>
                     </button>
                   )}
                   {!isReporter && (

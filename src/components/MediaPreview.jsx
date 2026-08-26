@@ -63,6 +63,66 @@ export const getMediaType = (media = {}) => {
 
 const clampZoom = (value) => Math.min(4, Math.max(1, Number(value.toFixed(2))));
 
+const ResponsiveVideo = ({
+  src,
+  controls = true,
+  autoPlay = false,
+  muted = false,
+  loop = false,
+  compact = false,
+  fullscreen = false,
+  onOrientationChange,
+}) => {
+  const [isPortrait, setIsPortrait] = useState(false);
+
+  const handleLoadedMetadata = (event) => {
+    const video = event.currentTarget;
+    const width = Number(video.videoWidth || 0);
+    const height = Number(video.videoHeight || 0);
+
+    if (width > 0 && height > 0) {
+      const portrait = height > width;
+      setIsPortrait(portrait);
+      onOrientationChange?.(portrait, { width, height });
+    }
+  };
+
+  if (fullscreen) {
+    return (
+      <video
+        src={src}
+        controls={controls}
+        autoPlay={autoPlay}
+        muted={muted}
+        loop={loop}
+        playsInline
+        onLoadedMetadata={handleLoadedMetadata}
+        className="max-h-[calc(100vh-112px)] max-w-full rounded-2xl bg-black object-contain shadow-2xl"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-black">
+      <video
+        src={src}
+        controls={controls}
+        autoPlay={autoPlay}
+        muted={muted}
+        loop={loop}
+        preload="metadata"
+        playsInline
+        onLoadedMetadata={handleLoadedMetadata}
+        className={
+          isPortrait
+            ? `${compact ? "h-full max-w-[88%]" : "h-full max-w-[74%]"} w-auto bg-black object-contain`
+            : "h-full w-full bg-black object-contain"
+        }
+      />
+    </div>
+  );
+};
+
 const MediaPreview = ({
   media,
   src,
@@ -79,6 +139,8 @@ const MediaPreview = ({
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [viewerIndex, setViewerIndex] = useState(initialIndex);
+  const [isPortraitVideo, setIsPortraitVideo] = useState(false);
+  const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const file = media instanceof File ? media : media?.file || media?.rawFile;
@@ -325,11 +387,11 @@ const MediaPreview = ({
             </div>
           ) : (
             <div className="flex min-h-full items-center justify-center">
-              <video
+              <ResponsiveVideo
                 src={activeViewerMedia.url}
                 controls
                 autoPlay
-                className="max-h-[calc(100vh-112px)] max-w-full rounded-2xl bg-black object-contain shadow-2xl"
+                fullscreen
               />
             </div>
           )}
@@ -377,10 +439,33 @@ const MediaPreview = ({
   }
 
   if (resolved.type === "video") {
+    const portraitWidth = compact ? "max-w-[250px]" : "max-w-[360px]";
+    const portraitHeight = compact ? "h-[420px]" : "h-[600px]";
+    const landscapeHeight = compact ? "h-32" : "h-56 sm:h-64";
+
     return (
       <div className="w-full">
-        <div className={`${boxClass} group relative`}>
-          <video src={resolved.url} controls preload="metadata" className="h-full w-full bg-black object-contain" />
+        <div
+          className={`group relative mx-auto overflow-hidden rounded-2xl border border-red-100 bg-black shadow-inner ring-1 ring-slate-950/5 ${
+            isPortraitVideo
+              ? `${portraitWidth} ${portraitHeight}`
+              : `${landscapeHeight} w-full ${className}`
+          }`}
+          style={
+            isPortraitVideo && videoDimensions.width > 0 && videoDimensions.height > 0
+              ? { aspectRatio: `${videoDimensions.width} / ${videoDimensions.height}`, height: "auto" }
+              : undefined
+          }
+        >
+          <ResponsiveVideo
+            src={resolved.url}
+            controls
+            compact={compact}
+            onOrientationChange={(portrait, dimensions) => {
+              setIsPortraitVideo(portrait);
+              setVideoDimensions(dimensions);
+            }}
+          />
           <button
             type="button"
             onClick={openViewer}
