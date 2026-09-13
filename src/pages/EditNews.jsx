@@ -43,6 +43,7 @@ const createInitialForm = () => {
     descriptionFontSize: 16,
     media: [],
     category: "",
+    categories: [],
     reporter: { name: "", avatar: "" },
     hashtags: [""],
     isBreaking: false,
@@ -218,10 +219,11 @@ const EditNews = () => {
             .filter(Boolean)
         : [];
 
-      const categoryId =
-        typeof news.category === "string"
-          ? news.category
-          : news.category?._id || "";
+      const normalizedCategoryIds = Array.isArray(news.categories) && news.categories.length > 0
+        ? news.categories.map((c) => (typeof c === "string" ? c : c?._id)).filter(Boolean)
+        : (news.category ? [typeof news.category === "string" ? news.category : news.category?._id].filter(Boolean) : []);
+
+      const categoryId = normalizedCategoryIds[0] || (typeof news.category === "string" ? news.category : news.category?._id || "");
 
       setForm({
         ...createInitialForm(),
@@ -233,6 +235,7 @@ const EditNews = () => {
         description: news.description ?? "",
         descriptionFontSize: Number(news.descriptionFontSize) || 16,
         category: categoryId,
+        categories: normalizedCategoryIds,
         reporter: {
           name: news.reporter?.name ?? "",
           avatar: news.reporter?.avatar ?? "",
@@ -283,11 +286,33 @@ const EditNews = () => {
     }
   };
 
+  const toggleCategorySelection = (catId) => {
+    setForm((prev) => {
+      const current = prev.categories || [];
+      const exists = current.includes(catId);
+      const updated = exists
+        ? current.filter((id) => id !== catId)
+        : [...current, catId];
+      return {
+        ...prev,
+        categories: updated,
+        category: updated[0] || "",
+      };
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === "cities") {
       const values = Array.from(e.target.selectedOptions).map((option) => option.value);
       setForm((prev) => ({ ...prev, cities: values }));
+    } else if (name === "categories") {
+      const values = Array.from(e.target.selectedOptions).map((option) => option.value);
+      setForm((prev) => ({
+        ...prev,
+        categories: values,
+        category: values[0] || "",
+      }));
     } else if (name === "reporter.name" || name === "reporter.avatar") {
       setForm((prev) => ({
         ...prev,
@@ -419,7 +444,8 @@ const EditNews = () => {
       formData.append('titleFontSize', form.titleFontSize || 22);
       formData.append('description', form.description);
       formData.append('descriptionFontSize', form.descriptionFontSize || 16);
-      formData.append('category', form.category);
+      formData.append('category', form.category || (form.categories?.[0] || ''));
+      formData.append('categories', JSON.stringify(form.categories || []));
       formData.append('hashtags', JSON.stringify((form.hashtags || []).filter((tag) => String(tag).trim())));
       formData.append('isBreaking', form.isBreaking);
       formData.append('breakingText', form.breakingText || 'Breaking News');
@@ -610,22 +636,67 @@ const EditNews = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
-                  Category
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Categories <span className="text-xs font-normal text-slate-500">(Select one or more)</span>
+                  </label>
+                  {form.categories?.length > 0 && (
+                    <span className="text-xs font-bold text-red-600">
+                      {form.categories.length} selected
+                    </span>
+                  )}
+                </div>
+
+                {/* Interactive Pills Selector */}
+                <div className="flex flex-wrap gap-2 mb-2 p-3 border rounded-xl bg-slate-50 min-h-[52px] items-center">
+                  {categories.length === 0 ? (
+                    <span className="text-xs text-slate-400">Loading categories...</span>
+                  ) : (
+                    categories.map((cat) => {
+                      const isSelected = (form.categories || []).includes(cat._id);
+                      return (
+                        <button
+                          key={cat._id}
+                          type="button"
+                          onClick={() => toggleCategorySelection(cat._id)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm border cursor-pointer ${
+                            isSelected
+                              ? "ring-2 ring-red-400 font-black scale-105"
+                              : "opacity-60 hover:opacity-100 border-slate-200 bg-white text-slate-700"
+                          }`}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: cat.backgroundColor || "#F97316",
+                                  color: cat.textColor || "#FFFFFF",
+                                  borderColor: cat.backgroundColor || "#F97316",
+                                }
+                              : {}
+                          }
+                        >
+                          <span>{isSelected ? "✓ " : "+ "}{cat.name}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
                 <select
-                  name="category"
-                  value={form.category}
+                  name="categories"
+                  value={form.categories || []}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  multiple
+                  className="w-full border rounded-xl px-4 py-2.5 min-h-[95px] text-xs font-medium outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  <option value="">Select category</option>
                   {categories.map((cat) => (
                     <option key={cat._id} value={cat._id}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Click the category pills above or hold Ctrl on Windows to select multiple categories.
+                </p>
               </div>
 
               <div>
@@ -970,15 +1041,27 @@ const EditNews = () => {
                 <div className="p-4">
                   <div className="mb-[10px] flex items-start justify-between gap-2">
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px] pr-1">
-                      <span
-                        className="shrink-0 rounded-full px-[11px] py-[5px] text-[11px] font-black uppercase"
-                        style={{
-                          backgroundColor: categories.find((cat) => cat._id === form.category)?.backgroundColor || '#F97316',
-                          color: categories.find((cat) => cat._id === form.category)?.textColor || '#FFFFFF',
-                        }}
-                      >
-                        {categories.find((cat) => cat._id === form.category)?.name || 'News'}
-                      </span>
+                      {(form.categories && form.categories.length > 0 ? form.categories : (form.category ? [form.category] : [])).map((catId) => {
+                        const cat = categories.find((c) => c._id === catId);
+                        if (!cat) return null;
+                        return (
+                          <span
+                            key={catId}
+                            className="shrink-0 rounded-full px-[11px] py-[5px] text-[11px] font-black uppercase shadow-sm"
+                            style={{
+                              backgroundColor: cat.backgroundColor || '#F97316',
+                              color: cat.textColor || '#FFFFFF',
+                            }}
+                          >
+                            {cat.name}
+                          </span>
+                        );
+                      })}
+                      {(!form.categories || form.categories.length === 0) && !form.category && (
+                        <span className="shrink-0 rounded-full bg-[#F97316] px-[11px] py-[5px] text-[11px] font-black uppercase text-white">
+                          News
+                        </span>
+                      )}
 
                       {(form.cities || []).map((cityId) => {
                         const city = cities.find((entry) => entry._id === cityId);

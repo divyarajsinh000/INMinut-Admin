@@ -634,9 +634,16 @@ const NewsList = () => {
                           <FiStar /> Pinned
                         </span>
                       )}
-                      <span className="rounded-full px-3 py-1.5 text-xs font-black" style={{ backgroundColor: item.category?.backgroundColor || "#06B6D4", color: item.category?.textColor || "#FFFFFF" }}>
-                        {item.category?.name || "News"}
-                      </span>
+                      {((item.categories && item.categories.length > 0) ? item.categories : (item.category ? [item.category] : [])).map((cat, catIdx) => (
+                        <span key={cat._id || `cat-${catIdx}`} className="rounded-full px-3 py-1.5 text-xs font-black shadow-sm" style={{ backgroundColor: cat.backgroundColor || "#06B6D4", color: cat.textColor || "#FFFFFF" }}>
+                          {cat.name}
+                        </span>
+                      ))}
+                      {(!item.categories || item.categories.length === 0) && !item.category && (
+                        <span className="rounded-full bg-cyan-500 px-3 py-1.5 text-xs font-black text-white">
+                          News
+                        </span>
+                      )}
                       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
                         <FiCalendar /> {formatNewsDateTime(item.publishedDate)}
                       </span>
