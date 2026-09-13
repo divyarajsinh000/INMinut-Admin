@@ -3,6 +3,7 @@ import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { getFullMediaUrl } from "../components/MediaPreview";
 import { FiCamera, FiMail, FiUser, FiKey, FiShield } from "react-icons/fi";
 import ImageCropModal from "../components/ImageCropModal";
@@ -122,7 +123,7 @@ const Profile = () => {
       setSelectedFile(null);
       toast.success("Profile updated successfully");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update profile");
+      toast.error(formatErrorMessage(error, "Failed to update profile"));
     } finally {
       setLoading(false);
     }

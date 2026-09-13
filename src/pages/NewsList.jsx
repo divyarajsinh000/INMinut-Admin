@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import {
   FiPlus,
   FiEdit,
@@ -18,6 +19,13 @@ import {
   FiX,
   FiExternalLink,
   FiHeart,
+  FiSearch,
+  FiUser,
+  FiRotateCcw,
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import MediaPreview, { getMediaType } from "../components/MediaPreview";
@@ -37,11 +45,24 @@ const isCanceledRequest = (error) =>
   error?.name === "CanceledError" ||
   error?.message === "canceled";
 
+const formatNewsDateTime = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const dateFormatted = d.toLocaleDateString();
+  const timeFormatted = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+  return `${dateFormatted}, ${timeFormatted}`;
+};
+
+
+
 
 const NewsList = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search")?.trim() || "";
+  const adminQuery = searchParams.get("adminId")?.trim() || "";
+  const dateQuery = searchParams.get("date")?.trim() || "";
   const isReporter = user?.role === "reporter";
 
   const [news, setNews] = useState([]);
@@ -53,6 +74,38 @@ const NewsList = () => {
   const [analyticsTotals, setAnalyticsTotals] = useState({ totalViews: 0, totalSaves: 0, totalShares: 0, totalNews: 0 });
   const [sortBy, setSortBy] = useState("manual");
 
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalNewsCount, setTotalNewsCount] = useState(0);
+
+  // Multi-filter inputs state
+  const [titleFilter, setTitleFilter] = useState(searchQuery);
+  const [adminFilter, setAdminFilter] = useState(adminQuery);
+  const [dateFilter, setDateFilter] = useState(dateQuery);
+  const [admins, setAdmins] = useState([]);
+
+  useEffect(() => {
+    setTitleFilter(searchQuery);
+    setAdminFilter(adminQuery);
+    setDateFilter(dateQuery);
+  }, [searchQuery, adminQuery, dateQuery]);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const res = await axiosInstance.get("/admins");
+        if (Array.isArray(res.data?.data)) {
+          setAdmins(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch admin users list:", err);
+      }
+    };
+    fetchAdmins();
+  }, []);
+
   const getApiSortKey = (value) => {
     if (value === "views") return "viewCount";
     if (value === "saves") return "saveCount";
@@ -60,12 +113,26 @@ const NewsList = () => {
     return "manual";
   };
 
-  const fetchNews = async (activeSort = sortBy, activeSearch = searchQuery) => {
+  const fetchNews = async (
+    activeSort = sortBy,
+    activeSearch = searchQuery,
+    activeAdmin = adminQuery,
+    activeDate = dateQuery,
+    activePage = page,
+    activeLimit = limit
+  ) => {
     try {
       setLoading(true);
       const safeSort = isReporter ? "manual" : activeSort;
       const apiSortKey = getApiSortKey(safeSort);
-      const commonParams = { ...(activeSearch ? { search: activeSearch } : {}), includeInactive: true };
+      const commonParams = {
+        ...(activeSearch ? { search: activeSearch } : {}),
+        ...(activeAdmin ? { adminId: activeAdmin } : {}),
+        ...(activeDate ? { date: activeDate } : {}),
+        includeInactive: true,
+        page: activePage,
+        limit: activeLimit,
+      };
 
       const [newsRes, analyticsRes] = await Promise.all([
         safeSort === "manual"
@@ -84,12 +151,25 @@ const NewsList = () => {
         ? newsRes.data.data || []
         : newsRes.data.data?.news || [];
 
+      const paginationInfo = safeSort === "manual"
+        ? newsRes.data.pagination
+        : newsRes.data.data?.pagination;
+
       setNews(newsData);
+
+      if (paginationInfo) {
+        setTotalPages(paginationInfo.totalPages || 1);
+        setTotalNewsCount(paginationInfo.total || newsData.length);
+      } else {
+        setTotalPages(1);
+        setTotalNewsCount(newsData.length);
+      }
+
       if (analyticsRes?.data?.data?.totals) {
         setAnalyticsTotals(analyticsRes.data.data.totals);
       } else {
         setAnalyticsTotals({
-          totalNews: newsData.length,
+          totalNews: paginationInfo?.total || newsData.length,
           totalViews: newsData.reduce((sum, item) => sum + Number(item.viewCount || 0), 0),
           totalSaves: newsData.reduce((sum, item) => sum + Number(item.saveCount || 0), 0),
           totalShares: newsData.reduce((sum, item) => sum + Number(item.shareCount || 0), 0),
@@ -97,11 +177,51 @@ const NewsList = () => {
       }
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error(error?.response?.data?.message || "Failed to load news");
+        toast.error(formatErrorMessage(error, "Failed to load news"));
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterSubmit = (e) => {
+    if (e) e.preventDefault();
+    setPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (titleFilter.trim()) nextParams.set("search", titleFilter.trim());
+    else nextParams.delete("search");
+
+    if (adminFilter.trim()) nextParams.set("adminId", adminFilter.trim());
+    else nextParams.delete("adminId");
+
+    if (dateFilter.trim()) nextParams.set("date", dateFilter.trim());
+    else nextParams.delete("date");
+
+    setSearchParams(nextParams);
+  };
+
+  const removeSingleFilter = (key) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete(key);
+    setSearchParams(nextParams);
+  };
+
+  const resetAllFilters = () => {
+    setTitleFilter("");
+    setAdminFilter("");
+    setDateFilter("");
+    setPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("search");
+    nextParams.delete("adminId");
+    nextParams.delete("date");
+    setSearchParams(nextParams);
+  };
+
+  const getSelectedAdminName = (id) => {
+    const found = admins.find((a) => a._id === id);
+    return found ? `${found.name || found.email} (${found.role})` : id;
   };
 
   const clearSearch = () => {
@@ -116,9 +236,9 @@ const NewsList = () => {
     try {
       await axiosInstance.delete(`/news/${id}`);
       toast.success("News deleted");
-      fetchNews(sortBy, searchQuery);
+      fetchNews(sortBy, searchQuery, adminQuery, dateQuery, page, limit);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete news");
+      toast.error(formatErrorMessage(error, "Failed to delete news"));
     }
   };
 
@@ -127,9 +247,9 @@ const NewsList = () => {
     try {
       await axiosInstance.patch(`/news/${id}/toggle-pin`);
       toast.success("News pin status updated");
-      fetchNews(sortBy, searchQuery);
+      fetchNews(sortBy, searchQuery, adminQuery, dateQuery, page, limit);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update pin status");
+      toast.error(formatErrorMessage(error, "Failed to update pin status"));
     }
   };
 
@@ -161,7 +281,7 @@ const NewsList = () => {
 
       toast.success(res.data?.message || "News visibility updated");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update news visibility");
+      toast.error(formatErrorMessage(error, "Failed to update news visibility"));
     } finally {
       setTogglingActiveId(null);
     }
@@ -175,9 +295,9 @@ const NewsList = () => {
         orderedIds: updatedNews.map((item) => item._id),
       });
       toast.success("News order updated");
-      fetchNews(sortBy, searchQuery);
+      fetchNews(sortBy, searchQuery, adminQuery, dateQuery, page, limit);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to save news order");
+      toast.error(formatErrorMessage(error, "Failed to save news order"));
     } finally {
       setSavingOrder(false);
     }
@@ -214,8 +334,41 @@ const NewsList = () => {
   };
 
   useEffect(() => {
-    fetchNews(sortBy, searchQuery);
-  }, [sortBy, searchQuery]);
+    setPage(1);
+  }, [sortBy, searchQuery, adminQuery, dateQuery]);
+
+  useEffect(() => {
+    fetchNews(sortBy, searchQuery, adminQuery, dateQuery, page, limit);
+  }, [sortBy, searchQuery, adminQuery, dateQuery, page, limit]);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+
+      if (page < totalPages - 2) pages.push("...");
+      if (!pages.includes(totalPages)) pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const activeFilter = FILTERS.find((item) => item.key === sortBy) || FILTERS[0];
 
@@ -223,7 +376,7 @@ const NewsList = () => {
     { label: "Total views", value: analyticsTotals.totalViews, icon: FiEye, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Total saves", value: analyticsTotals.totalSaves, icon: FiBookmark, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "Total shares", value: analyticsTotals.totalShares, icon: FiShare2, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Total news", value: analyticsTotals.totalNews || news.length, icon: FiBarChart2, color: "text-cyan-600", bg: "bg-cyan-50" },
+    { label: "Total news", value: analyticsTotals.totalNews || totalNewsCount || news.length, icon: FiBarChart2, color: "text-cyan-600", bg: "bg-cyan-50" },
   ];
 
   return (
@@ -241,6 +394,122 @@ const NewsList = () => {
         <Link to="/news/add" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 font-black text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-600 hover:to-blue-700">
           <FiPlus /> Add News
         </Link>
+      </div>
+
+      {/* Title + Admin + Date Multi-Filter Search Bar */}
+      <div className="mb-6 rounded-[1.6rem] border border-white/80 bg-white/90 p-4 shadow-sm backdrop-blur">
+        <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-center">
+          {/* Title / Keyword Input */}
+          <div className="lg:col-span-4">
+            <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Title / Keyword</label>
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-slate-500 focus-within:border-cyan-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-cyan-500/20">
+              <FiSearch className="shrink-0 text-slate-400" />
+              <input
+                type="text"
+                value={titleFilter}
+                onChange={(e) => setTitleFilter(e.target.value)}
+                placeholder="Search title, description..."
+                className="w-full border-0 bg-transparent text-sm font-bold text-slate-800 placeholder-slate-400 outline-none focus:ring-0"
+              />
+              {titleFilter && (
+                <button type="button" onClick={() => setTitleFilter("")} className="text-slate-400 hover:text-slate-600">
+                  <FiX size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Admin / Reporter Creator Dropdown */}
+          <div className="lg:col-span-3">
+            <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Admin / Reporter</label>
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-slate-500 focus-within:border-cyan-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-cyan-500/20">
+              <FiUser className="shrink-0 text-slate-400" />
+              <select
+                value={adminFilter}
+                onChange={(e) => setAdminFilter(e.target.value)}
+                className="w-full border-0 bg-transparent text-sm font-bold text-slate-800 outline-none focus:ring-0 cursor-pointer"
+              >
+                <option value="">All Admins & Reporters</option>
+                {admins.map((adm) => (
+                  <option key={adm._id} value={adm._id}>
+                    {adm.name || adm.email} ({adm.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Published Date Filter */}
+          <div className="lg:col-span-3">
+            <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Published Date</label>
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-slate-500 focus-within:border-cyan-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-cyan-500/20">
+              <FiCalendar className="shrink-0 text-slate-400" />
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full border-0 bg-transparent text-sm font-bold text-slate-800 outline-none focus:ring-0 cursor-pointer"
+              />
+              {dateFilter && (
+                <button type="button" onClick={() => setDateFilter("")} className="text-slate-400 hover:text-slate-600">
+                  <FiX size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Submit & Reset Buttons */}
+          <div className="flex items-end gap-2 lg:col-span-2 lg:h-full lg:pt-5">
+            <button
+              type="submit"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white shadow-md shadow-cyan-500/20 hover:bg-cyan-600 transition"
+            >
+              <FiSearch size={16} /> Search
+            </button>
+            {(searchQuery || adminQuery || dateQuery || titleFilter || adminFilter || dateFilter) && (
+              <button
+                type="button"
+                onClick={resetAllFilters}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-600 hover:bg-slate-100 hover:text-red-600 transition"
+                title="Reset all search filters"
+              >
+                <FiRotateCcw size={16} />
+              </button>
+            )}
+          </div>
+        </form>
+
+        {/* Active Filter Badges */}
+        {(searchQuery || adminQuery || dateQuery) && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs">
+            <span className="font-black text-slate-500">Active Filters:</span>
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-100 px-3 py-1 font-bold text-cyan-800">
+                Title: {searchQuery}
+                <button type="button" onClick={() => removeSingleFilter("search")} className="hover:text-cyan-950"><FiX size={13} /></button>
+              </span>
+            )}
+            {adminQuery && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 font-bold text-purple-800">
+                Admin: {getSelectedAdminName(adminQuery)}
+                <button type="button" onClick={() => removeSingleFilter("adminId")} className="hover:text-purple-950"><FiX size={13} /></button>
+              </span>
+            )}
+            {dateQuery && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 font-bold text-emerald-800">
+                Date: {dateQuery}
+                <button type="button" onClick={() => removeSingleFilter("date")} className="hover:text-emerald-950"><FiX size={13} /></button>
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              className="ml-auto text-xs font-black text-red-600 hover:underline"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {!isReporter && <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -285,15 +554,6 @@ const NewsList = () => {
           Active: {activeFilter.helper}. {sortBy !== "manual" ? "Zero-count news is hidden in this filter." : "Manual mode shows all news."}
         </p>
       </div>}
-
-      {searchQuery && (
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-cyan-800">
-          <p className="text-sm font-bold">Showing search results for: <span className="font-black">{searchQuery}</span></p>
-          <button onClick={clearSearch} className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">
-            <FiX /> Clear search
-          </button>
-        </div>
-      )}
 
       {loading ? (
         <p className="py-10 text-center font-bold text-slate-500">Loading...</p>
@@ -364,7 +624,7 @@ const NewsList = () => {
                 <div className="order-2 flex min-w-0 flex-1 items-start gap-4 xl:order-none">
                   <div className="hidden flex-col items-center gap-2 pt-1 text-slate-400 md:flex">
                     <FiMove className={!isReporter && sortBy === "manual" ? "cursor-grab" : "opacity-40"} />
-                    <span className="text-xs font-black">#{index + 1}</span>
+                    <span className="text-xs font-black">#{(page - 1) * limit + index + 1}</span>
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -378,8 +638,13 @@ const NewsList = () => {
                         {item.category?.name || "News"}
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
-                        <FiCalendar /> {new Date(item.publishedDate).toLocaleDateString()}
+                        <FiCalendar /> {formatNewsDateTime(item.publishedDate)}
                       </span>
+                      {(item.reporter?.name || item.createdBy?.name) && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700">
+                          <FiUser /> {item.reporter?.name || item.createdBy?.name}
+                        </span>
+                      )}
                       <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700">
                         <FiMapPin /> {item.cities?.length ? item.cities.map((city) => city.name).join(", ") : "All cities"}
                       </span>
@@ -478,6 +743,91 @@ const NewsList = () => {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && news.length > 0 && (
+        <div className="mt-8 flex flex-col gap-4 rounded-[1.6rem] border border-white/80 bg-white/90 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600">
+            <span>
+              Showing <span className="font-black text-slate-900">{Math.min((page - 1) * limit + 1, totalNewsCount)}</span> to{" "}
+              <span className="font-black text-slate-900">{Math.min(page * limit, totalNewsCount)}</span> of{" "}
+              <span className="font-black text-cyan-600">{totalNewsCount.toLocaleString()}</span> stories
+            </span>
+            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+              <span className="font-medium text-slate-500">Per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-black text-slate-700 shadow-sm focus:border-cyan-500 focus:outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-40"
+              title="First page"
+            >
+              <FiChevronsLeft size={16} />
+            </button>
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Previous page"
+            >
+              <FiChevronLeft size={16} />
+            </button>
+
+            {getPageNumbers().map((p, i) =>
+              p === "..." ? (
+                <span key={`ellipsis-${i}`} className="px-1 text-xs font-bold text-slate-400">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={`page-${p}`}
+                  onClick={() => handlePageChange(p)}
+                  className={`flex h-9 min-w-[36px] items-center justify-center rounded-xl px-2.5 text-xs font-black transition ${
+                    page === p
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/20"
+                      : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:bg-cyan-50"
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Next page"
+            >
+              <FiChevronRight size={16} />
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={page >= totalPages}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Last page"
+            >
+              <FiChevronsRight size={16} />
+            </button>
+          </div>
         </div>
       )}
     </AdminLayout>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Cropper from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 
 const createImage = (url) =>
   new Promise((resolve, reject) => {
@@ -136,7 +137,7 @@ const ImageCropModal = ({
       const croppedFile = await getCroppedImageFile(imageUrl, croppedAreaPixels, rotation, file);
       onCropDone?.(croppedFile);
     } catch (error) {
-      toast.error(error?.message || "Failed to crop image");
+      toast.error(formatErrorMessage(error, "Failed to crop image"));
     } finally {
       setProcessing(false);
     }
@@ -145,24 +146,24 @@ const ImageCropModal = ({
   if (!file) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex flex-col gap-2 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-black text-slate-900">{title}</h2>
-            <p className="text-xs font-semibold text-slate-500 break-all">{file.name}</p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 p-2 sm:p-4 backdrop-blur-sm overflow-y-auto">
+      <div className="relative my-auto flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:rounded-3xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="min-w-0 pr-3">
+            <h2 className="text-base sm:text-lg font-black text-slate-900">{title}</h2>
+            <p className="text-xs font-semibold text-slate-500 truncate max-w-[220px] sm:max-w-md">{file.name}</p>
           </div>
           <button
             type="button"
             onClick={onCancel}
             disabled={processing}
-            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-60"
+            className="shrink-0 rounded-xl bg-slate-100 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-60"
           >
             Close
           </button>
         </div>
 
-        <div className="relative h-[420px] bg-slate-900">
+        <div className="relative h-[250px] xs:h-[300px] sm:h-[400px] shrink-0 bg-slate-900">
           <Cropper
             image={imageUrl}
             crop={crop}
@@ -179,16 +180,16 @@ const ImageCropModal = ({
           />
         </div>
 
-        <div className="space-y-4 border-t border-slate-200 p-5">
-          <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 p-4 sm:p-5 custom-scrollbar">
+          <div className="flex flex-wrap gap-2">
             {presetAspects.map((preset) => (
               <button
                 key={preset.label}
                 type="button"
                 onClick={() => setCurrentAspect(preset.value)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
                   currentAspect === preset.value
-                    ? "bg-red-500 text-white"
+                    ? "bg-red-500 text-white shadow-md shadow-red-500/20"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
@@ -197,7 +198,7 @@ const ImageCropModal = ({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
             <div>
               <div className="mb-1 flex items-center justify-between text-xs font-black uppercase tracking-wide text-slate-500">
                 <span>Zoom</span>
@@ -229,25 +230,25 @@ const ImageCropModal = ({
               />
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onUseOriginal}
-              disabled={processing}
-              className="rounded-xl bg-slate-100 px-5 py-3 text-sm font-black text-slate-700 hover:bg-slate-200 disabled:opacity-60"
-            >
-              Use Original
-            </button>
-            <button
-              type="button"
-              onClick={handleCrop}
-              disabled={processing}
-              className="rounded-xl bg-red-500 px-6 py-3 text-sm font-black text-white hover:bg-red-600 disabled:opacity-60"
-            >
-              {processing ? "Cropping..." : "Apply Crop"}
-            </button>
-          </div>
+        <div className="shrink-0 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end border-t border-slate-200 p-3 sm:px-5 bg-slate-50/50">
+          <button
+            type="button"
+            onClick={onUseOriginal}
+            disabled={processing}
+            className="w-full sm:w-auto rounded-xl bg-slate-100 px-5 py-2.5 text-xs sm:text-sm font-black text-slate-700 hover:bg-slate-200 disabled:opacity-60"
+          >
+            Use Original
+          </button>
+          <button
+            type="button"
+            onClick={handleCrop}
+            disabled={processing}
+            className="w-full sm:w-auto rounded-xl bg-red-500 px-6 py-2.5 text-xs sm:text-sm font-black text-white hover:bg-red-600 disabled:opacity-60 shadow-lg shadow-red-500/20"
+          >
+            {processing ? "Cropping..." : "Apply Crop"}
+          </button>
         </div>
       </div>
     </div>

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import MediaPreview from "../components/MediaPreview";
 import ImageCropModal from "../components/ImageCropModal";
+import ToggleSwitch from "../components/ToggleSwitch";
 
 const AddAdvertisement = () => {
   const navigate = useNavigate();
@@ -30,16 +32,16 @@ const AddAdvertisement = () => {
       const res = await axiosInstance.get("/locations/cities");
       setCities(res.data.data || []);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load cities");
+      toast.error(formatErrorMessage(error, "Failed to load cities"));
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const res = await axiosInstance.get("/categories");
+      const res = await axiosInstance.get("/categories?includeHidden=true");
       setCategories(res.data.data || []);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load categories");
+      toast.error(formatErrorMessage(error, "Failed to load categories"));
     }
   };
 
@@ -110,7 +112,7 @@ const AddAdvertisement = () => {
       toast.success("Advertisement added successfully");
       navigate("/advertisements");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to add advertisement");
+      toast.error(formatErrorMessage(error, "Failed to add advertisement"));
     } finally {
       setLoading(false);
     }
@@ -212,10 +214,16 @@ const AddAdvertisement = () => {
             )}
           </div>
 
-          <label className="flex items-center gap-2">
-            <input name="isEnabled" type="checkbox" checked={form.isEnabled} onChange={handleChange} className="w-5 h-5 accent-red-500" />
-            <span className="text-sm font-semibold text-slate-700">Enable advertisement</span>
-          </label>
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+            <div>
+              <p className="font-bold text-slate-800">Advertisement Status</p>
+              <p className="text-xs text-slate-500">Turn off to save advertisement now and show it later.</p>
+            </div>
+            <ToggleSwitch
+              checked={form.isEnabled}
+              onChange={(checked) => setForm((prev) => ({ ...prev, isEnabled: checked }))}
+            />
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button type="submit" disabled={loading} className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60">

@@ -93,7 +93,7 @@ const Navbar = ({ title, onMenuClick }) => {
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Search news title, hashtag, reporter..."
+              placeholder="Search title, admin/reporter, date..."
               className="min-w-0 flex-1 border-0 bg-transparent px-1 py-1 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:ring-0"
             />
             {keyword && (
@@ -127,7 +127,7 @@ const Navbar = ({ title, onMenuClick }) => {
             </button>
 
             {notificationOpen && (
-              <div className="absolute right-0 mt-3 w-[min(92vw,360px)] overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-2xl shadow-slate-300/50">
+              <div className="absolute right-0 mt-3 w-[min(92vw,360px)] max-h-[82vh] overflow-y-auto rounded-[1.4rem] border border-slate-200 bg-white shadow-2xl shadow-slate-300/50 custom-scrollbar">
                 <div className="border-b border-slate-100 bg-gradient-to-r from-red-50 to-red-50 p-4">
                   <p className="text-sm font-black text-slate-950">Admin notification summary</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">Quick health check from analytics API.</p>
@@ -207,7 +207,7 @@ const Navbar = ({ title, onMenuClick }) => {
         <input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
-          placeholder="Search news..."
+          placeholder="Search title, admin, date..."
           className="min-w-0 flex-1 border-0 bg-transparent px-1 py-1 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:ring-0"
         />
         {keyword && (

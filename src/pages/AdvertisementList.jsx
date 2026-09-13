@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { FiEdit, FiExternalLink, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import MediaPreview from "../components/MediaPreview";
+import ToggleSwitch from "../components/ToggleSwitch";
 
 const getCityLabel = (cities = []) => {
   if (!Array.isArray(cities) || cities.length === 0) return "All cities";
@@ -22,7 +24,7 @@ const AdvertisementList = () => {
       const res = await axiosInstance.get("/advertisements?sort=recent");
       setAdvertisements(res.data.data || []);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load advertisements");
+      toast.error(formatErrorMessage(error, "Failed to load advertisements"));
     } finally {
       setLoading(false);
     }
@@ -34,7 +36,7 @@ const AdvertisementList = () => {
       toast.success("Advertisement status updated");
       fetchAdvertisements();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update advertisement status");
+      toast.error(formatErrorMessage(error, "Failed to update advertisement status"));
     }
   };
 
@@ -46,7 +48,7 @@ const AdvertisementList = () => {
       toast.success("Advertisement deleted");
       fetchAdvertisements();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete advertisement");
+      toast.error(formatErrorMessage(error, "Failed to delete advertisement"));
     }
   };
 
@@ -91,9 +93,11 @@ const AdvertisementList = () => {
                     <span className="text-xs px-3 py-1.5 bg-red-50 text-red-700 rounded-full font-black">
                       {item.label || "Advertisement"}
                     </span>
-                    <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                      {item.isEnabled ? "On" : "Off"}
-                    </span>
+                    <ToggleSwitch
+                      checked={item.isEnabled}
+                      onChange={() => toggleAdvertisement(item._id)}
+                      title={item.isEnabled ? "Turn off advertisement" : "Turn on advertisement"}
+                    />
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews || 4} news
                     </span>
@@ -115,12 +119,6 @@ const AdvertisementList = () => {
                 </div>
 
                 <div className="flex lg:flex-col gap-2 shrink-0">
-                  <button
-                    onClick={() => toggleAdvertisement(item._id)}
-                    className={`px-4 py-3 rounded-2xl font-black text-sm flex-1 lg:flex-none text-center ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
-                  >
-                    {item.isEnabled ? "Turn Off" : "Turn On"}
-                  </button>
                   <Link to={`/advertisements/edit/${item._id}`} className="p-3 bg-slate-100 rounded-2xl hover:bg-slate-200 flex items-center justify-center">
                     <FiEdit className="text-slate-700" />
                   </Link>

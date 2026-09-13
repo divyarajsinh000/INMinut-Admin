@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { FiBell, FiBellOff, FiTrash2, FiRefreshCw, FiSmartphone } from "react-icons/fi";
 
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString() : "-");
@@ -64,7 +65,7 @@ const GuestUsers = () => {
       const res = await axiosInstance.get("/guest-users");
       setUsers(res.data.data || []);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to load app users");
+      toast.error(formatErrorMessage(error, "Failed to load app users"));
     } finally {
       setLoading(false);
     }
@@ -77,7 +78,7 @@ const GuestUsers = () => {
       toast.success("Guest user deleted");
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete guest user");
+      toast.error(formatErrorMessage(error, "Failed to delete guest user"));
     }
   };
 
@@ -127,7 +128,7 @@ const GuestUsers = () => {
 
       toast.success(enabled ? "Notifications enabled by admin" : "Notifications disabled by admin");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update notification access");
+      toast.error(formatErrorMessage(error, "Failed to update notification access"));
     } finally {
       setUpdatingDeviceKey("");
     }
@@ -143,7 +144,7 @@ const GuestUsers = () => {
       toast.success(`Notifications ${enabled ? "enabled" : "disabled"} for all devices`);
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update all devices");
+      toast.error(formatErrorMessage(error, "Failed to update all devices"));
     } finally {
       setUpdatingDeviceKey("");
     }
@@ -154,39 +155,39 @@ const GuestUsers = () => {
   }, []);
 
   return (
-    <AdminLayout title="App Guest Devices">
-      <div className="bg-slate-950 text-white rounded-[2rem] p-6 mb-6 flex items-center justify-between gap-5 overflow-hidden relative">
+    <AdminLayout title="Android App Installs & Devices">
+      <div className="bg-slate-950 text-white rounded-[2rem] p-5 sm:p-6 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 overflow-hidden relative">
         <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-red-500/25 blur-3xl" />
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-red-500 flex items-center justify-center">
-            <FiSmartphone className="text-2xl" />
+        <div className="relative z-10 flex items-center gap-3 sm:gap-4">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl bg-red-500 flex items-center justify-center">
+            <FiSmartphone className="text-xl sm:text-2xl" />
           </div>
-          <div>
-            <h2 className="text-2xl font-black">Registered app devices</h2>
-            <p className="text-slate-300 mt-1">
-              {users.length} guest users · {deviceRows.length} device rows · {enabledDeviceCount} notification-enabled devices.
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-black">Android App Downloads & Devices</h2>
+            <p className="text-slate-300 text-xs sm:text-sm mt-1">
+              {users.length} total Android app downloads · {deviceRows.length} device registrations · {enabledDeviceCount} notification-enabled devices.
             </p>
-            <p className="text-red-100 text-xs font-bold mt-1">
-              Open the app once on every phone after updating so each phone sends its own deviceId and Expo token.
+            <p className="text-red-100 text-[11px] sm:text-xs font-bold mt-1">
+              Open the Android app once on every phone after updating so each phone registers its unique deviceId.
             </p>
           </div>
         </div>
-        <div className="relative z-10 flex flex-wrap justify-end gap-2">
+        <div className="relative z-10 flex flex-wrap gap-2 lg:justify-end">
           <button
             onClick={() => updateAllNotifications(true)}
             disabled={updatingDeviceKey === "all-devices"}
-            className="inline-flex items-center gap-2 px-4 py-3 bg-emerald-500 text-white rounded-2xl font-black hover:bg-emerald-600 disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm bg-emerald-500 text-white rounded-2xl font-black hover:bg-emerald-600 disabled:opacity-60"
           >
             <FiBell /> Enable all
           </button>
           <button
             onClick={() => updateAllNotifications(false)}
             disabled={updatingDeviceKey === "all-devices"}
-            className="inline-flex items-center gap-2 px-4 py-3 bg-red-500 text-white rounded-2xl font-black hover:bg-red-600 disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm bg-red-500 text-white rounded-2xl font-black hover:bg-red-600 disabled:opacity-60"
           >
             <FiBellOff /> Disable all
           </button>
-          <button onClick={fetchUsers} className="inline-flex items-center gap-2 px-4 py-3 bg-white text-slate-950 rounded-2xl font-black hover:bg-red-50">
+          <button onClick={fetchUsers} className="inline-flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm bg-white text-slate-950 rounded-2xl font-black hover:bg-red-50">
             <FiRefreshCw /> Refresh
           </button>
         </div>

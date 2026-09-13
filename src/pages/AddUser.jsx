@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const AddUser = () => {
       toast.success("User added successfully");
       navigate("/users");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to add user");
+      toast.error(formatErrorMessage(error, "Failed to add user"));
     } finally {
       setLoading(false);
     }

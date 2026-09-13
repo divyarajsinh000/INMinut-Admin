@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import {
   FiActivity,
   FiBarChart2,
@@ -47,12 +48,13 @@ const EmptyState = ({ text = "No data yet" }) => (
 
 const tabs = [
   { key: "today", label: "Period Analytics", icon: FiActivity },
+  { key: "app_usage", label: "App Usage & Installs", icon: FiSmartphone },
   { key: "category", label: "Category Wise", icon: FiTag },
   { key: "city", label: "City Wise", icon: FiMapPin },
   { key: "overall", label: "Overall Analytics", icon: FiBarChart2 },
 ];
 
-const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan" }) => {
+const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan", isString = false }) => {
   const tones = {
     cyan: "from-red-500 to-red-600 shadow-red-500/20",
     blue: "from-red-500 to-rose-600 shadow-red-500/20",
@@ -69,7 +71,9 @@ const MetricCard = ({ label, value, icon: Icon, helper, tone = "cyan" }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-wide text-slate-500 break-words">{label}</p>
-          <p className="mt-2 text-2xl sm:text-3xl font-black text-slate-950 break-words">{number(value)}</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-slate-950 break-words">
+            {isString ? value : number(value)}
+          </p>
           {helper && <p className="mt-1 text-xs font-bold text-slate-400 break-words">{helper}</p>}
         </div>
         <div className={`h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br ${tones[tone] || tones.cyan} text-white shadow-lg flex items-center justify-center`}>
@@ -268,7 +272,7 @@ const Header = ({ activeTab, setActiveTab, onRefresh }) => (
       </button>
     </div>
 
-    <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = activeTab === tab.key;
@@ -491,7 +495,7 @@ const Analytics = () => {
       const response = await axiosInstance.get("/news/analytics/dashboard", { params });
       setData(response.data.data);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load analytics");
+      toast.error(formatErrorMessage(error, "Failed to load analytics"));
     } finally {
       setLoading(false);
     }
@@ -533,7 +537,7 @@ const Analytics = () => {
       { label: "Saves in Period", value: totals.todaySaves, icon: FiBookmark, tone: "green" },
       { label: "Shares in Period", value: totals.todayShares, icon: FiShare2, tone: "purple" },
       { label: "Active Users in Period", value: totals.todayActiveUsers, icon: FiActivity, tone: "orange" },
-      { label: "New Guests in Period", value: totals.todayGuestUsers, icon: FiUsers, tone: "slate" },
+      { label: "Android Installs in Period", value: totals.todayGuestUsers, icon: FiUsers, tone: "slate" },
       {
         label: "Top Category News",
         value: topTodayCategory?.newsCount,
@@ -550,6 +554,23 @@ const Analytics = () => {
       },
     ];
   }, [data, totals]);
+
+  const appUsageCards = useMemo(() => {
+    const totalMinutes = totals.totalUsageMinutes || 0;
+    const usageHoursStr = totalMinutes >= 60 ? `${(totalMinutes / 60).toFixed(1)} Hours` : `${totalMinutes} Mins`;
+    const avgUsageStr = `${totals.avgUsageMinutesPerUser || 0} Mins / User`;
+
+    return [
+      { label: "Today App Opens (DAU)", value: totals.todayActiveUsers, icon: FiActivity, tone: "orange", helper: "Unique users active today" },
+      { label: "Total Android Downloads", value: totals.totalGuestUsers, icon: FiSmartphone, tone: "cyan", helper: "Total app installations" },
+      { label: "30-Day Active Users", value: totals.activeUsers30d, icon: FiZap, tone: "green", helper: "Active in last 30 days" },
+      { label: "Est. Inactive / Uninstalls", value: totals.estimatedUninstalls, icon: FiUsers, tone: "slate", helper: "No activity > 30 days" },
+      { label: "Est. Total Reading Time", value: usageHoursStr, isString: true, icon: FiTrendingUp, tone: "blue", helper: "Total user reading time" },
+      { label: "Avg Usage per Active User", value: avgUsageStr, isString: true, icon: FiBarChart2, tone: "purple", helper: "Est. time per active phone" },
+      { label: "Notifications Enabled", value: totals.notificationsEnabledUsers, icon: FiSmartphone, tone: "green", helper: "Push notifications active" },
+      { label: "Notifications Disabled", value: totals.notificationsDisabledUsers, icon: FiSmartphone, tone: "red", helper: "Push notifications disabled" },
+    ];
+  }, [totals]);
 
   const categoryCards = useMemo(() => {
     const topCategory = data?.topCategories?.[0];
@@ -578,7 +599,7 @@ const Analytics = () => {
       { label: "Total Views", value: totals.totalViews, icon: FiEye, tone: "blue" },
       { label: "Total Saves", value: totals.totalSaves, icon: FiBookmark, tone: "green" },
       { label: "Total Shares", value: totals.totalShares, icon: FiShare2, tone: "purple" },
-      { label: "Guest Users", value: totals.totalGuestUsers, icon: FiUsers, tone: "slate" },
+      { label: "Android App Downloads", value: totals.totalGuestUsers, icon: FiUsers, tone: "slate" },
       { label: "Notifications On", value: totals.notificationsEnabledUsers, icon: FiSmartphone, tone: "cyan" },
       { label: "Pinned News", value: totals.pinnedNews, icon: FiTrendingUp, tone: "yellow" },
       { label: "Breaking News", value: totals.breakingNews, icon: FiZap, tone: "red" },
@@ -632,6 +653,62 @@ const Analytics = () => {
                   <RankingList title="Most Viewed News" icon={FiEye} items={data?.topNewsByViews} valueKey="viewCount" valueLabel="Views" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
                   <RankingList title="Most Saved News" icon={FiBookmark} items={data?.topNewsBySaves} valueKey="saveCount" valueLabel="Saves" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
                   <RankingList title="Most Shared News" icon={FiShare2} items={data?.topNewsByShares} valueKey="shareCount" valueLabel="Shares" getName={(item) => item.title} getMeta={(item) => item.category?.name || "No category"} />
+                </div>
+              </>
+            )}
+
+            {activeTab === "app_usage" && (
+              <>
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {appUsageCards.map((card) => <MetricCard key={card.label} {...card} />)}
+                </div>
+
+                <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+                  <ChartCard title="Daily Active App Usage Trend" subtitle="Daily user activity, views & engagement">
+                    <GroupedTrendChart items={charts.actionTrend} />
+                  </ChartCard>
+
+                  <ChartCard title="Push Notifications Preference" subtitle="Devices with push notifications turned on vs off">
+                    <SplitChart
+                      items={[
+                        { label: "Notifications On", count: totals.notificationsEnabledUsers },
+                        { label: "Notifications Off", count: totals.notificationsDisabledUsers },
+                      ]}
+                      labelKey="label"
+                      valueKey="count"
+                    />
+                  </ChartCard>
+                </div>
+
+                <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+                  <ChartCard title="App Version Distribution" subtitle="Top installed app versions on user devices">
+                    <BarChart items={data?.appVersionBreakdown || []} labelKey="version" valueKey="users" />
+                  </ChartCard>
+
+                  <ChartCard title="Top Phone & Device Models" subtitle="Most popular Android phone models in use">
+                    <BarChart items={data?.deviceModelBreakdown || []} labelKey="model" valueKey="count" />
+                  </ChartCard>
+                </div>
+
+                <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+                  <RankingList
+                    title="Top Installed App Versions"
+                    icon={FiSmartphone}
+                    items={data?.appVersionBreakdown}
+                    valueKey="users"
+                    valueLabel="Users"
+                    getName={(item) => item.version || "Unknown Version"}
+                    getMeta={(item) => `${number(item.users)} installed devices`}
+                  />
+                  <RankingList
+                    title="Top User Device Models"
+                    icon={FiSmartphone}
+                    items={data?.deviceModelBreakdown}
+                    valueKey="count"
+                    valueLabel="Devices"
+                    getName={(item) => item.model || "Unknown Device"}
+                    getMeta={(item) => `${number(item.count)} registered phones`}
+                  />
                 </div>
               </>
             )}

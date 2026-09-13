@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { FiPlus, FiEdit, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,7 +17,7 @@ const Users = () => {
       const res = await axiosInstance.get("/admin");
       setUsers(res.data.data);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load users");
+      toast.error(formatErrorMessage(error, "Failed to load users"));
     } finally {
       setLoading(false);
     }
@@ -29,7 +30,7 @@ const Users = () => {
       toast.success("User deleted");
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete user");
+      toast.error(formatErrorMessage(error, "Failed to delete user"));
     }
   };
 

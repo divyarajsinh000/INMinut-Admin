@@ -5,6 +5,7 @@ import MediaPreview, { getFullMediaUrl, getMediaType } from "../components/Media
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import MediaSlider from "../components/MediaSlider";
 import QuillEditor from "../components/QuillEditor";
 import ImageCropModal from "../components/ImageCropModal";
@@ -14,28 +15,49 @@ const isCanceledRequest = (error) =>
   error?.name === "CanceledError" ||
   error?.message === "canceled";
 
-const createInitialForm = () => ({
-  title: "",
-  titleLink: "",
-  titleColor: "#111827",
-  titleFontSize: 22,
-  description: "",
-  descriptionFontSize: 16,
-  media: [],
-  category: "",
-  reporter: { name: "", avatar: "" },
-  hashtags: [""],
-  isBreaking: false,
-  breakingText: "Breaking News",
-  breakingBgColor: "#EF4444",
-  breakingTextColor: "#FFFFFF",
-  isBreakingBlink: false,
-  isActive: true,
-  hideReporter: false,
-  publishedDate: new Date().toISOString().split("T")[0],
-  cities: [],
-  sendNotification: true,
-});
+const getLocalDateString = (d = new Date()) => {
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return "";
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getLocalTimeString = (d = new Date()) => {
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return "00:00";
+  const hours = String(dateObj.getHours()).padStart(2, "0");
+  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const createInitialForm = () => {
+  const now = new Date();
+  return {
+    title: "",
+    titleLink: "",
+    titleColor: "#111827",
+    titleFontSize: 22,
+    description: "",
+    descriptionFontSize: 16,
+    media: [],
+    category: "",
+    reporter: { name: "", avatar: "" },
+    hashtags: [""],
+    isBreaking: false,
+    breakingText: "Breaking News",
+    breakingBgColor: "#EF4444",
+    breakingTextColor: "#FFFFFF",
+    isBreakingBlink: false,
+    isActive: true,
+    hideReporter: false,
+    publishedDate: getLocalDateString(now),
+    publishedTime: getLocalTimeString(now),
+    cities: [],
+    sendNotification: false,
+  };
+};
 
 const EditNews = () => {
   const { id } = useParams();
@@ -136,11 +158,11 @@ const EditNews = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axiosInstance.get("/categories");
+      const res = await axiosInstance.get("/categories?includeHidden=true");
       setCategories(res.data.data);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error(error?.response?.data?.message || "Failed to load categories");
+        toast.error(formatErrorMessage(error, "Failed to load categories"));
       }
     }
   };
@@ -151,7 +173,7 @@ const EditNews = () => {
       setCities(res.data.data || []);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error(error?.response?.data?.message || "Failed to load cities");
+        toast.error(formatErrorMessage(error, "Failed to load cities"));
       }
     }
   };
@@ -176,9 +198,8 @@ const EditNews = () => {
         ? new Date(news.publishedDate)
         : new Date();
 
-      const publishedDate = Number.isNaN(safePublishedDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : safePublishedDate.toISOString().split("T")[0];
+      const publishedDate = getLocalDateString(safePublishedDate) || getLocalDateString(new Date());
+      const publishedTime = getLocalTimeString(safePublishedDate) || getLocalTimeString(new Date());
 
       const normalizedMedia = Array.isArray(news.media)
         ? news.media.filter(Boolean)
@@ -226,8 +247,9 @@ const EditNews = () => {
         isActive: news.isActive !== false,
         hideReporter: Boolean(news.hideReporter),
         publishedDate,
+        publishedTime,
         cities: normalizedCities,
-        sendNotification: true,
+        sendNotification: false,
       });
 
       setMediaToKeep(
@@ -249,10 +271,7 @@ const EditNews = () => {
       }
 
       if (!isCanceledRequest(error)) {
-        const message =
-          error?.response?.data?.message ||
-          error?.message ||
-          "Failed to load news";
+        const message = formatErrorMessage(error, "Failed to load news");
 
         setLoadError(message);
         toast.error(message);
@@ -409,7 +428,10 @@ const EditNews = () => {
       formData.append('isBreakingBlink', form.isBreakingBlink);
       formData.append('isActive', form.isActive);
       formData.append('hideReporter', form.hideReporter);
-      formData.append('publishedDate', form.publishedDate);
+      const combinedDateTime = form.publishedDate
+        ? new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toISOString()
+        : new Date().toISOString();
+      formData.append('publishedDate', combinedDateTime);
       formData.append('cities', JSON.stringify(form.cities || []));
       formData.append('mediaToKeep', JSON.stringify(mediaToKeep));
       formData.append('sendNotification', form.sendNotification);
@@ -427,7 +449,7 @@ const EditNews = () => {
       toast.success("News updated successfully");
       navigate("/news");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update news");
+      toast.error(formatErrorMessage(error, "Failed to update news"));
     } finally {
       setLoading(false);
     }
@@ -794,66 +816,98 @@ const EditNews = () => {
                 <div className="pr-4">
                   <p className="font-bold text-slate-800">Send Notification For This Edit</p>
                   <p className="text-xs text-slate-500">
-                    Checked by default. Uncheck it to update this news without sending a push notification.
+                    Turned off by default. Turn on to update this news and send a push notification.
                   </p>
                 </div>
-                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="sendNotification"
-                    type="checkbox"
-                    checked={form.sendNotification}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.sendNotification ? "Send" : "Don't send"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="sendNotification"
+                      type="checkbox"
+                      checked={form.sendNotification}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[70px]">
+                    {form.sendNotification ? "Send" : "Don't send"}
+                  </span>
                 </label>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
-                <div>
+                <div className="pr-4">
                   <p className="font-bold text-slate-800">Display News In App</p>
                   <p className="text-xs text-slate-500">Turn off to save news now and show it later.</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="isActive"
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.isActive ? "On" : "Off"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="isActive"
+                      type="checkbox"
+                      checked={form.isActive}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[32px]">
+                    {form.isActive ? "On" : "Off"}
+                  </span>
                 </label>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
-                <div>
+                <div className="pr-4">
                   <p className="font-bold text-slate-800">Hide Reporter Info</p>
                   <p className="text-xs text-slate-500">Turn on to hide the reporter name and image in the app.</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="hideReporter"
-                    type="checkbox"
-                    checked={form.hideReporter}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.hideReporter ? "Hidden" : "Visible"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="hideReporter"
+                      type="checkbox"
+                      checked={form.hideReporter}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[55px]">
+                    {form.hideReporter ? "Hidden" : "Visible"}
+                  </span>
                 </label>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
-                  Published Date
-                </label>
-                <input
-                  name="publishedDate"
-                  type="date"
-                  value={form.publishedDate}
-                  onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
-                />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Published Date
+                  </label>
+                  <input
+                    name="publishedDate"
+                    type="date"
+                    value={form.publishedDate}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Published Time
+                  </label>
+                  <input
+                    name="publishedTime"
+                    type="time"
+                    value={form.publishedTime}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -882,7 +936,7 @@ const EditNews = () => {
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Live app preview</span>
             </div>
 
-            <div className="h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2 custom-scrollbar">
+            <div className="h-[480px] sm:h-[600px] lg:h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2 custom-scrollbar">
               <div className="mb-[10px] overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
                 {previewImageUrl && (
                   <div className="relative w-full overflow-hidden bg-white" style={{ height: 300 }}>
@@ -946,7 +1000,11 @@ const EditNews = () => {
                         <rect x="3" y="5" width="18" height="16" rx="2" />
                         <path d="M16 3v4M8 3v4M3 11h18" />
                       </svg>
-                      <span>{form.publishedDate ? new Date(`${form.publishedDate}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today'}</span>
+                      <span>
+                        {form.publishedDate
+                          ? `${new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+                          : 'Today'}
+                      </span>
                     </div>
                   </div>
 

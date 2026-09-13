@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 
 const AddCategory = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AddCategory = () => {
     backgroundColor: "#FF6B35",
     textColor: "#FFFFFF",
     isHighlighted: false,
+    isVisible: true,
   });
 
   const handleChange = (e) => {
@@ -29,7 +31,7 @@ const AddCategory = () => {
       toast.success("Category added successfully");
       navigate("/categories");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to add category");
+      toast.error(formatErrorMessage(error, "Failed to add category"));
     } finally {
       setLoading(false);
     }
@@ -115,6 +117,29 @@ const AddCategory = () => {
                   <span className="block text-xs text-slate-600 mt-1">It will pulse in the mobile app to draw attention.</span>
                 </span>
               </label>
+
+              <div
+                onClick={() => setForm((prev) => ({ ...prev, isVisible: !prev.isVisible }))}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 cursor-pointer hover:bg-slate-100/80 transition-all select-none"
+              >
+                <div>
+                  <span className="block text-sm font-bold text-slate-800">Show / Hide Category</span>
+                  <span className="block text-xs text-slate-600 mt-1">Controls whether this category is visible in the app.</span>
+                </div>
+
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-sm shrink-0">
+                  <div
+                    className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
+                      form.isVisible ? "bg-emerald-500 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+                  </div>
+                  <span className={`text-sm font-bold ${form.isVisible ? "text-emerald-700" : "text-slate-500"}`}>
+                    {form.isVisible ? "On" : "Off"}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex gap-3">
                 <button
