@@ -14,12 +14,14 @@ const Dashboard = () => {
   const [totalNews, setTotalNews] = useState(0);
   const [totalCategories, setTotalCategories] = useState(0);
   const [totalGuestUsers, setTotalGuestUsers] = useState(0);
+  const [deviceStats, setDeviceStats] = useState(null);
 
   const fetchStats = async () => {
-    const [newsRes, categoriesRes, guestUsersRes] = await Promise.allSettled([
+    const [newsRes, categoriesRes, guestUsersRes, statsRes] = await Promise.allSettled([
       axiosInstance.get("/news"),
       axiosInstance.get("/categories"),
       axiosInstance.get("/guest-users"),
+      axiosInstance.get("/guest-users/stats"),
     ]);
 
     if (newsRes.status === "fulfilled") {
@@ -29,6 +31,8 @@ const Dashboard = () => {
     if (categoriesRes.status === "fulfilled") {
       setTotalCategories(categoriesRes.value.data.data.length);
     }
+
+    if (statsRes.status === "fulfilled") setDeviceStats(statsRes.value.data.data);
 
     if (guestUsersRes.status === "fulfilled") {
       setTotalGuestUsers(guestUsersRes.value.data.data.length);
@@ -54,6 +58,11 @@ const Dashboard = () => {
     { label: "Total News", value: totalNews, icon: FiFileText, color: "from-red-500 to-red-600" },
     { label: "Categories", value: totalCategories, icon: FiTag, color: "from-rose-500 to-violet-600" },
     { label: "App Guest Users", value: totalGuestUsers, icon: FiSmartphone, color: "from-emerald-500 to-teal-600" },
+    { label: "Registered Devices", value: deviceStats?.registeredDevices ?? '-', icon: FiSmartphone, color: "from-indigo-500 to-blue-600" },
+    { label: "Active 24 Hours", value: deviceStats?.activeToday ?? '-', icon: FiTrendingUp, color: "from-emerald-500 to-green-600" },
+    { label: "Active 30 Days", value: deviceStats?.activeLast30Days ?? '-', icon: FiTrendingUp, color: "from-orange-500 to-red-600" },
+    { label: "Android Devices", value: deviceStats?.byPlatform?.android ?? '-', icon: FiSmartphone, color: "from-lime-500 to-emerald-600" },
+    { label: "iOS Devices", value: deviceStats?.byPlatform?.ios ?? '-', icon: FiSmartphone, color: "from-sky-500 to-blue-600" },
   ];
 
   return (
@@ -72,7 +81,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

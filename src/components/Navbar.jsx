@@ -93,7 +93,7 @@ const Navbar = ({ title, onMenuClick }) => {
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Search news title, hashtag, reporter..."
+              placeholder="Search title, admin, date (use + to combine)..."
               className="min-w-0 flex-1 border-0 bg-transparent px-1 py-1 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:ring-0"
             />
             {keyword && (
@@ -207,7 +207,7 @@ const Navbar = ({ title, onMenuClick }) => {
         <input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
-          placeholder="Search news..."
+          placeholder="Title, admin or date (DD/MM/YYYY)..."
           className="min-w-0 flex-1 border-0 bg-transparent px-1 py-1 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400 focus:ring-0"
         />
         {keyword && (

@@ -9,7 +9,7 @@ const maskToken = (token = "") => (!token ? "-" : token.length <= 18 ? token : `
 
 const getDevices = (item) => {
   const devices = Array.isArray(item.devices)
-    ? item.devices.filter((device) => device?.expoPushToken || device?.fcmToken)
+    ? item.devices.filter((device) => device?.deviceId || device?.expoPushToken || device?.fcmToken)
     : [];
 
   if (devices.length > 0) return devices;

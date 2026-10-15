@@ -288,7 +288,7 @@ const NewsList = () => {
 
       {searchQuery && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-cyan-800">
-          <p className="text-sm font-bold">Showing search results for: <span className="font-black">{searchQuery}</span></p>
+          <p className="text-sm font-bold">Showing news matching: <span className="font-black">{searchQuery}</span></p>
           <button onClick={clearSearch} className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">
             <FiX /> Clear search
           </button>
