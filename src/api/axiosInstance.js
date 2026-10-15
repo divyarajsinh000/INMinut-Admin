@@ -56,8 +56,6 @@ axiosInstance.interceptors.response.use(
     if (status === 401 && !isLoginRequest) {
       clearAdminToken();
       window.dispatchEvent(new CustomEvent("admin-session-expired"));
-    } else if (error?.response?.data?.message && !isLoginRequest) {
-      toast.error(error.response.data.message);
     }
 
     return Promise.reject(error);

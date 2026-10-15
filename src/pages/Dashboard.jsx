@@ -3,6 +3,7 @@ import { FiFileText, FiTag, FiSmartphone, FiTrendingUp } from "react-icons/fi";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 
 
 const isCanceledRequest = (error) =>
@@ -19,7 +20,7 @@ const Dashboard = () => {
   const fetchStats = async () => {
     const [newsRes, categoriesRes, guestUsersRes, statsRes] = await Promise.allSettled([
       axiosInstance.get("/news"),
-      axiosInstance.get("/categories"),
+      axiosInstance.get("/categories?includeHidden=true"),
       axiosInstance.get("/guest-users"),
       axiosInstance.get("/guest-users/stats"),
     ]);
@@ -46,8 +47,7 @@ const Dashboard = () => {
 
     if (importantFailures.length > 0) {
       toast.error(
-        importantFailures[0]?.reason?.response?.data?.message ||
-          "Failed to load stats"
+        formatErrorMessage(importantFailures[0]?.reason, "Failed to load stats")
       );
     }
   };
@@ -63,6 +63,7 @@ const Dashboard = () => {
     { label: "Active 30 Days", value: deviceStats?.activeLast30Days ?? '-', icon: FiTrendingUp, color: "from-orange-500 to-red-600" },
     { label: "Android Devices", value: deviceStats?.byPlatform?.android ?? '-', icon: FiSmartphone, color: "from-lime-500 to-emerald-600" },
     { label: "iOS Devices", value: deviceStats?.byPlatform?.ios ?? '-', icon: FiSmartphone, color: "from-sky-500 to-blue-600" },
+    { label: "Android App Downloads", value: totalGuestUsers, icon: FiSmartphone, color: "from-emerald-500 to-teal-600" },
   ];
 
   return (
@@ -73,7 +74,7 @@ const Dashboard = () => {
           <div>
             <p className="text-red-300 font-black uppercase tracking-widest text-xs">Overview</p>
             <h2 className="text-3xl font-black mt-2">Manage city-wise breaking news</h2>
-            <p className="text-slate-300 mt-2 max-w-2xl">Track posts, categories and registered app devices from one modern dashboard.</p>
+            <p className="text-slate-300 mt-2 max-w-2xl">Track posts, categories and real-time Android app downloads from one modern dashboard.</p>
           </div>
           <div className="hidden md:flex h-16 w-16 rounded-3xl bg-white/10 items-center justify-center text-red-300">
             <FiTrendingUp className="text-3xl" />

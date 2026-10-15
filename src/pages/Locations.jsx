@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { FiTrash2, FiRefreshCw, FiMenu } from "react-icons/fi";
 
 const emptyCountry = { name: "", code: "" };
@@ -29,7 +30,7 @@ const Locations = () => {
       setStates(stateRes.data.data || []);
       setCities(cityRes.data.data || []);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to load locations");
+      toast.error(formatErrorMessage(error, "Failed to load locations"));
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ const Locations = () => {
       setCountryForm(emptyCountry);
       fetchLocations();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add country");
+      toast.error(formatErrorMessage(error, "Failed to add country"));
     }
   };
 
@@ -64,7 +65,7 @@ const Locations = () => {
       setStateForm(emptyState);
       fetchLocations();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add state");
+      toast.error(formatErrorMessage(error, "Failed to add state"));
     }
   };
 
@@ -76,7 +77,7 @@ const Locations = () => {
       setCityForm(emptyCity);
       fetchLocations();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add city");
+      toast.error(formatErrorMessage(error, "Failed to add city"));
     }
   };
 
@@ -87,7 +88,7 @@ const Locations = () => {
       toast.success(`${type} deleted`);
       fetchLocations();
     } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to delete ${type}`);
+      toast.error(formatErrorMessage(error, `Failed to delete ${type}`));
     }
   };
 
@@ -96,7 +97,7 @@ const Locations = () => {
       await axiosInstance.put(`/locations/${type}s/reorder`, { orderedIds });
       toast.success(`${type} order updated`);
     } catch (error) {
-      toast.error(`Failed to reorder ${type}s`);
+      toast.error(formatErrorMessage(error, `Failed to reorder ${type}s`));
       fetchLocations();
     }
   };
