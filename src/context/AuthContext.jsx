@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import {
   clearAdminToken,
   getAdminToken,
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }) => {
       toast.success("Login successful");
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error(formatErrorMessage(error, "Login failed"));
       return false;
     }
   };

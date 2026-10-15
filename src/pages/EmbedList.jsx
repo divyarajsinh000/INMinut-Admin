@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { FiEdit, FiPlus, FiTrash2, FiCode } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import ToggleSwitch from "../components/ToggleSwitch";
 
 const EmbedList = () => {
   const { user } = useAuth();
@@ -16,7 +18,7 @@ const EmbedList = () => {
       const res = await axiosInstance.get("/embeds?sort=recent");
       setEmbeds(res.data.data || []);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load embeds");
+      toast.error(formatErrorMessage(error, "Failed to load embeds"));
     } finally {
       setLoading(false);
     }
@@ -28,7 +30,7 @@ const EmbedList = () => {
       toast.success("Embed status updated");
       fetchEmbeds();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update embed status");
+      toast.error(formatErrorMessage(error, "Failed to update embed status"));
     }
   };
 
@@ -40,7 +42,7 @@ const EmbedList = () => {
       toast.success("Embed deleted successfully");
       fetchEmbeds();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete embed");
+      toast.error(formatErrorMessage(error, "Failed to delete embed"));
     }
   };
 
@@ -77,9 +79,11 @@ const EmbedList = () => {
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <span className={`text-xs px-3 py-1.5 rounded-full font-black ${item.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                      {item.isEnabled ? "On" : "Off"}
-                    </span>
+                    <ToggleSwitch
+                      checked={item.isEnabled}
+                      onChange={() => toggleEmbed(item._id)}
+                      title={item.isEnabled ? "Turn off embed" : "Turn on embed"}
+                    />
                     <span className="text-xs px-3 py-1.5 bg-rose-50 text-rose-700 rounded-full font-black">
                       After {item.positionAfterNews} news
                     </span>
@@ -103,12 +107,6 @@ const EmbedList = () => {
                 </div>
 
                 <div className="flex lg:flex-col gap-2 shrink-0 w-full lg:w-auto">
-                  <button
-                    onClick={() => toggleEmbed(item._id)}
-                    className={`px-4 py-3 rounded-2xl font-black text-sm flex-1 lg:flex-none text-center ${item.isEnabled ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-50 text-green-700 hover:bg-green-100"}`}
-                  >
-                    {item.isEnabled ? "Turn Off" : "Turn On"}
-                  </button>
                   <Link to={`/embeds/edit/${item._id}`} className="p-3 bg-slate-100 rounded-2xl hover:bg-slate-200 flex items-center justify-center">
                     <FiEdit className="text-slate-700" />
                   </Link>

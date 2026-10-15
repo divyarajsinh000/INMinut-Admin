@@ -1,5 +1,5 @@
 import { API_ORIGIN } from "../config/env";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   FiChevronLeft,
@@ -10,6 +10,7 @@ import {
   FiMaximize2,
   FiMinus,
   FiPlus,
+  FiPlay,
   FiRefreshCcw,
   FiX,
 } from "react-icons/fi";
@@ -73,6 +74,8 @@ const ResponsiveVideo = ({
   fullscreen = false,
   onOrientationChange,
 }) => {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isPortrait, setIsPortrait] = useState(false);
 
   const handleLoadedMetadata = (event) => {
@@ -84,6 +87,17 @@ const ResponsiveVideo = ({
       const portrait = height > width;
       setIsPortrait(portrait);
       onOrientationChange?.(portrait, { width, height });
+    }
+  };
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -103,8 +117,9 @@ const ResponsiveVideo = ({
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-black">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-black group/video">
       <video
+        ref={videoRef}
         src={src}
         controls={controls}
         autoPlay={autoPlay}
@@ -112,6 +127,9 @@ const ResponsiveVideo = ({
         loop={loop}
         preload="metadata"
         playsInline
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
         onLoadedMetadata={handleLoadedMetadata}
         className={
           isPortrait
@@ -119,6 +137,18 @@ const ResponsiveVideo = ({
             : "h-full w-full bg-black object-contain"
         }
       />
+      {!isPlaying && (
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="absolute inset-0 flex items-center justify-center bg-black/30 transition-all hover:bg-black/20"
+          aria-label="Play video"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600/90 text-white shadow-2xl backdrop-blur transition-all duration-300 hover:scale-110 hover:bg-red-600 ring-4 ring-white/30">
+            <FiPlay className="ml-1 text-2xl" />
+          </div>
+        </button>
+      )}
     </div>
   );
 };
@@ -266,16 +296,16 @@ const MediaPreview = ({
         aria-modal="true"
         onClick={() => setIsViewerOpen(false)}
       >
-        <div className="flex min-h-[64px] items-center justify-between gap-3 border-b border-white/10 bg-black/60 px-4 py-3 backdrop-blur">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black text-white">{activeViewerMedia.name}</p>
-            <p className="text-xs font-semibold text-white/60">
+        <div className="flex min-h-[56px] sm:min-h-[64px] items-center justify-between gap-2 sm:gap-3 border-b border-white/10 bg-black/60 px-3 py-2.5 sm:px-4 sm:py-3 backdrop-blur">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs sm:text-sm font-black text-white">{activeViewerMedia.name}</p>
+            <p className="truncate text-[10px] sm:text-xs font-semibold text-white/60">
               {galleryResolved.length > 1 ? "Use ← / → to slide. " : ""}
-              {activeViewerMedia.type === "image" ? "Use + / - to zoom. Drag scrollbars after zoom." : ""}
+              {activeViewerMedia.type === "image" ? "Use + / - to zoom." : ""}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {activeViewerMedia.type === "image" && (
               <>
                 <button
@@ -284,12 +314,12 @@ const MediaPreview = ({
                     event.stopPropagation();
                     setZoom((current) => clampZoom(current - 0.25));
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                  className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
                   title="Zoom out"
                 >
-                  <FiMinus />
+                  <FiMinus className="text-sm sm:text-base" />
                 </button>
-                <span className="min-w-[58px] rounded-full bg-white px-3 py-2 text-center text-xs font-black text-slate-950">
+                <span className="min-w-[48px] sm:min-w-[58px] rounded-full bg-white px-2 py-1 sm:px-3 sm:py-2 text-center text-[10px] sm:text-xs font-black text-slate-950">
                   {Math.round(zoom * 100)}%
                 </span>
                 <button
@@ -298,10 +328,10 @@ const MediaPreview = ({
                     event.stopPropagation();
                     setZoom((current) => clampZoom(current + 0.25));
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                  className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
                   title="Zoom in"
                 >
-                  <FiPlus />
+                  <FiPlus className="text-sm sm:text-base" />
                 </button>
                 <button
                   type="button"
@@ -322,10 +352,10 @@ const MediaPreview = ({
                 event.stopPropagation();
                 setIsViewerOpen(false);
               }}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-950 shadow-lg hover:bg-red-50"
+              className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white text-slate-950 shadow-lg hover:bg-red-50"
               aria-label="Close preview"
             >
-              <FiX size={22} />
+              <FiX className="text-base sm:text-lg" />
             </button>
           </div>
         </div>
@@ -338,10 +368,10 @@ const MediaPreview = ({
                 event.stopPropagation();
                 goToViewerItem(viewerIndex - 1);
               }}
-              className="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur hover:bg-red-600"
+              className="absolute left-2 sm:left-4 top-1/2 z-10 flex h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-red-600"
               aria-label="Previous media"
             >
-              <FiChevronLeft size={26} />
+              <FiChevronLeft className="text-xl sm:text-2xl" />
             </button>
             <button
               type="button"
@@ -349,10 +379,10 @@ const MediaPreview = ({
                 event.stopPropagation();
                 goToViewerItem(viewerIndex + 1);
               }}
-              className="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur hover:bg-red-600"
+              className="absolute right-2 sm:right-4 top-1/2 z-10 flex h-10 w-10 sm:h-12 sm:w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur hover:bg-red-600"
               aria-label="Next media"
             >
-              <FiChevronRight size={26} />
+              <FiChevronRight className="text-xl sm:text-2xl" />
             </button>
             <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-xs font-black text-white backdrop-blur">
               {viewerIndex + 1} / {galleryResolved.length}

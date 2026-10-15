@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
+import ToggleSwitch from "../components/ToggleSwitch";
 
 
 const decodeEmbedValue = (value = "") =>
@@ -188,7 +190,7 @@ const EditEmbed = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axiosInstance.get("/categories");
+        const res = await axiosInstance.get("/categories?includeHidden=true");
         const payload = res?.data?.data ?? res?.data;
         const list = Array.isArray(payload)
           ? payload
@@ -204,7 +206,7 @@ const EditEmbed = () => {
           data: error?.response?.data,
           message: error?.message,
         });
-        toast.error(error?.response?.data?.message || "Failed to load categories");
+        toast.error(formatErrorMessage(error, "Failed to load categories"));
       }
     };
     fetchCategories();
@@ -225,7 +227,7 @@ const EditEmbed = () => {
         });
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load embed details");
+      toast.error(formatErrorMessage(error, "Failed to load embed details"));
       navigate("/embeds");
     } finally {
       setFetching(false);
@@ -262,7 +264,7 @@ const EditEmbed = () => {
       toast.success("Embed card updated successfully");
       navigate("/embeds");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update embed card");
+      toast.error(formatErrorMessage(error, "Failed to update embed card"));
     } finally {
       setLoading(false);
     }
@@ -363,16 +365,10 @@ const EditEmbed = () => {
                 <p className="font-bold text-slate-800">Display Embed In App</p>
                 <p className="text-xs text-slate-500">Turn off to hide embed in the app.</p>
               </div>
-              <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                <input
-                  name="isEnabled"
-                  type="checkbox"
-                  checked={form.isEnabled}
-                  onChange={handleChange}
-                  className="h-5 w-5 accent-red-500"
-                />
-                {form.isEnabled ? "On" : "Off"}
-              </label>
+              <ToggleSwitch
+                checked={form.isEnabled}
+                onChange={(checked) => setForm((prev) => ({ ...prev, isEnabled: checked }))}
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">

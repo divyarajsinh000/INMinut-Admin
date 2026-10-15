@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import { getFullMediaUrl } from "../components/MediaPreview";
 import { FiUpload, FiImage } from "react-icons/fi";
 import ImageCropModal from "../components/ImageCropModal";
@@ -35,7 +36,7 @@ const Settings = () => {
         setSettings(res.data.settings);
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load settings");
+      toast.error(formatErrorMessage(error, "Failed to load settings"));
     } finally {
       setLoading(false);
     }
@@ -97,7 +98,7 @@ const Settings = () => {
         reloadSettings();
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update settings");
+      toast.error(formatErrorMessage(error, "Failed to update settings"));
     } finally {
       setSaving(false);
     }

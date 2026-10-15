@@ -5,6 +5,7 @@ import MediaPreview, { getFullMediaUrl, getMediaType } from "../components/Media
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 import MediaSlider from "../components/MediaSlider";
 import QuillEditor from "../components/QuillEditor";
 import ImageCropModal from "../components/ImageCropModal";
@@ -14,28 +15,50 @@ const isCanceledRequest = (error) =>
   error?.name === "CanceledError" ||
   error?.message === "canceled";
 
-const createInitialForm = () => ({
-  title: "",
-  titleLink: "",
-  titleColor: "#111827",
-  titleFontSize: 22,
-  description: "",
-  descriptionFontSize: 16,
-  media: [],
-  category: "",
-  reporter: { name: "", avatar: "" },
-  hashtags: [""],
-  isBreaking: false,
-  breakingText: "Breaking News",
-  breakingBgColor: "#EF4444",
-  breakingTextColor: "#FFFFFF",
-  isBreakingBlink: false,
-  isActive: true,
-  hideReporter: false,
-  publishedDate: new Date().toISOString().split("T")[0],
-  cities: [],
-  sendNotification: true,
-});
+const getLocalDateString = (d = new Date()) => {
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return "";
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getLocalTimeString = (d = new Date()) => {
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return "00:00";
+  const hours = String(dateObj.getHours()).padStart(2, "0");
+  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const createInitialForm = () => {
+  const now = new Date();
+  return {
+    title: "",
+    titleLink: "",
+    titleColor: "#111827",
+    titleFontSize: 22,
+    description: "",
+    descriptionFontSize: 16,
+    media: [],
+    category: "",
+    categories: [],
+    reporter: { name: "", avatar: "" },
+    hashtags: [""],
+    isBreaking: false,
+    breakingText: "Breaking News",
+    breakingBgColor: "#EF4444",
+    breakingTextColor: "#FFFFFF",
+    isBreakingBlink: false,
+    isActive: true,
+    hideReporter: false,
+    publishedDate: getLocalDateString(now),
+    publishedTime: getLocalTimeString(now),
+    cities: [],
+    sendNotification: false,
+  };
+};
 
 const EditNews = () => {
   const { id } = useParams();
@@ -136,11 +159,11 @@ const EditNews = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axiosInstance.get("/categories");
+      const res = await axiosInstance.get("/categories?includeHidden=true");
       setCategories(res.data.data);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error(error?.response?.data?.message || "Failed to load categories");
+        toast.error(formatErrorMessage(error, "Failed to load categories"));
       }
     }
   };
@@ -151,7 +174,7 @@ const EditNews = () => {
       setCities(res.data.data || []);
     } catch (error) {
       if (!isCanceledRequest(error)) {
-        toast.error(error?.response?.data?.message || "Failed to load cities");
+        toast.error(formatErrorMessage(error, "Failed to load cities"));
       }
     }
   };
@@ -176,9 +199,8 @@ const EditNews = () => {
         ? new Date(news.publishedDate)
         : new Date();
 
-      const publishedDate = Number.isNaN(safePublishedDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : safePublishedDate.toISOString().split("T")[0];
+      const publishedDate = getLocalDateString(safePublishedDate) || getLocalDateString(new Date());
+      const publishedTime = getLocalTimeString(safePublishedDate) || getLocalTimeString(new Date());
 
       const normalizedMedia = Array.isArray(news.media)
         ? news.media.filter(Boolean)
@@ -197,10 +219,11 @@ const EditNews = () => {
             .filter(Boolean)
         : [];
 
-      const categoryId =
-        typeof news.category === "string"
-          ? news.category
-          : news.category?._id || "";
+      const normalizedCategoryIds = Array.isArray(news.categories) && news.categories.length > 0
+        ? news.categories.map((c) => (typeof c === "string" ? c : c?._id)).filter(Boolean)
+        : (news.category ? [typeof news.category === "string" ? news.category : news.category?._id].filter(Boolean) : []);
+
+      const categoryId = normalizedCategoryIds[0] || (typeof news.category === "string" ? news.category : news.category?._id || "");
 
       setForm({
         ...createInitialForm(),
@@ -212,6 +235,7 @@ const EditNews = () => {
         description: news.description ?? "",
         descriptionFontSize: Number(news.descriptionFontSize) || 16,
         category: categoryId,
+        categories: normalizedCategoryIds,
         reporter: {
           name: news.reporter?.name ?? "",
           avatar: news.reporter?.avatar ?? "",
@@ -226,8 +250,9 @@ const EditNews = () => {
         isActive: news.isActive !== false,
         hideReporter: Boolean(news.hideReporter),
         publishedDate,
+        publishedTime,
         cities: normalizedCities,
-        sendNotification: true,
+        sendNotification: false,
       });
 
       setMediaToKeep(
@@ -249,10 +274,7 @@ const EditNews = () => {
       }
 
       if (!isCanceledRequest(error)) {
-        const message =
-          error?.response?.data?.message ||
-          error?.message ||
-          "Failed to load news";
+        const message = formatErrorMessage(error, "Failed to load news");
 
         setLoadError(message);
         toast.error(message);
@@ -264,11 +286,33 @@ const EditNews = () => {
     }
   };
 
+  const toggleCategorySelection = (catId) => {
+    setForm((prev) => {
+      const current = prev.categories || [];
+      const exists = current.includes(catId);
+      const updated = exists
+        ? current.filter((id) => id !== catId)
+        : [...current, catId];
+      return {
+        ...prev,
+        categories: updated,
+        category: updated[0] || "",
+      };
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === "cities") {
       const values = Array.from(e.target.selectedOptions).map((option) => option.value);
       setForm((prev) => ({ ...prev, cities: values }));
+    } else if (name === "categories") {
+      const values = Array.from(e.target.selectedOptions).map((option) => option.value);
+      setForm((prev) => ({
+        ...prev,
+        categories: values,
+        category: values[0] || "",
+      }));
     } else if (name === "reporter.name" || name === "reporter.avatar") {
       setForm((prev) => ({
         ...prev,
@@ -400,7 +444,8 @@ const EditNews = () => {
       formData.append('titleFontSize', form.titleFontSize || 22);
       formData.append('description', form.description);
       formData.append('descriptionFontSize', form.descriptionFontSize || 16);
-      formData.append('category', form.category);
+      formData.append('category', form.category || (form.categories?.[0] || ''));
+      formData.append('categories', JSON.stringify(form.categories || []));
       formData.append('hashtags', JSON.stringify((form.hashtags || []).filter((tag) => String(tag).trim())));
       formData.append('isBreaking', form.isBreaking);
       formData.append('breakingText', form.breakingText || 'Breaking News');
@@ -409,7 +454,10 @@ const EditNews = () => {
       formData.append('isBreakingBlink', form.isBreakingBlink);
       formData.append('isActive', form.isActive);
       formData.append('hideReporter', form.hideReporter);
-      formData.append('publishedDate', form.publishedDate);
+      const combinedDateTime = form.publishedDate
+        ? new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toISOString()
+        : new Date().toISOString();
+      formData.append('publishedDate', combinedDateTime);
       formData.append('cities', JSON.stringify(form.cities || []));
       formData.append('mediaToKeep', JSON.stringify(mediaToKeep));
       formData.append('sendNotification', form.sendNotification);
@@ -427,7 +475,7 @@ const EditNews = () => {
       toast.success("News updated successfully");
       navigate("/news");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update news");
+      toast.error(formatErrorMessage(error, "Failed to update news"));
     } finally {
       setLoading(false);
     }
@@ -588,22 +636,67 @@ const EditNews = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
-                  Category
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Categories <span className="text-xs font-normal text-slate-500">(Select one or more)</span>
+                  </label>
+                  {form.categories?.length > 0 && (
+                    <span className="text-xs font-bold text-red-600">
+                      {form.categories.length} selected
+                    </span>
+                  )}
+                </div>
+
+                {/* Interactive Pills Selector */}
+                <div className="flex flex-wrap gap-2 mb-2 p-3 border rounded-xl bg-slate-50 min-h-[52px] items-center">
+                  {categories.length === 0 ? (
+                    <span className="text-xs text-slate-400">Loading categories...</span>
+                  ) : (
+                    categories.map((cat) => {
+                      const isSelected = (form.categories || []).includes(cat._id);
+                      return (
+                        <button
+                          key={cat._id}
+                          type="button"
+                          onClick={() => toggleCategorySelection(cat._id)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm border cursor-pointer ${
+                            isSelected
+                              ? "ring-2 ring-red-400 font-black scale-105"
+                              : "opacity-60 hover:opacity-100 border-slate-200 bg-white text-slate-700"
+                          }`}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: cat.backgroundColor || "#F97316",
+                                  color: cat.textColor || "#FFFFFF",
+                                  borderColor: cat.backgroundColor || "#F97316",
+                                }
+                              : {}
+                          }
+                        >
+                          <span>{isSelected ? "✓ " : "+ "}{cat.name}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
                 <select
-                  name="category"
-                  value={form.category}
+                  name="categories"
+                  value={form.categories || []}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  multiple
+                  className="w-full border rounded-xl px-4 py-2.5 min-h-[95px] text-xs font-medium outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  <option value="">Select category</option>
                   {categories.map((cat) => (
                     <option key={cat._id} value={cat._id}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Click the category pills above or hold Ctrl on Windows to select multiple categories.
+                </p>
               </div>
 
               <div>
@@ -794,66 +887,98 @@ const EditNews = () => {
                 <div className="pr-4">
                   <p className="font-bold text-slate-800">Send Notification For This Edit</p>
                   <p className="text-xs text-slate-500">
-                    Checked by default. Uncheck it to update this news without sending a push notification.
+                    Turned off by default. Turn on to update this news and send a push notification.
                   </p>
                 </div>
-                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="sendNotification"
-                    type="checkbox"
-                    checked={form.sendNotification}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.sendNotification ? "Send" : "Don't send"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="sendNotification"
+                      type="checkbox"
+                      checked={form.sendNotification}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[70px]">
+                    {form.sendNotification ? "Send" : "Don't send"}
+                  </span>
                 </label>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
-                <div>
+                <div className="pr-4">
                   <p className="font-bold text-slate-800">Display News In App</p>
                   <p className="text-xs text-slate-500">Turn off to save news now and show it later.</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="isActive"
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.isActive ? "On" : "Off"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="isActive"
+                      type="checkbox"
+                      checked={form.isActive}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[32px]">
+                    {form.isActive ? "On" : "Off"}
+                  </span>
                 </label>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
-                <div>
+                <div className="pr-4">
                   <p className="font-bold text-slate-800">Hide Reporter Info</p>
                   <p className="text-xs text-slate-500">Turn on to hide the reporter name and image in the app.</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-bold text-slate-700">
-                  <input
-                    name="hideReporter"
-                    type="checkbox"
-                    checked={form.hideReporter}
-                    onChange={handleChange}
-                    className="h-5 w-5 accent-red-500"
-                  />
-                  {form.hideReporter ? "Hidden" : "Visible"}
+                <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">
+                  <div className="relative">
+                    <input
+                      name="hideReporter"
+                      type="checkbox"
+                      checked={form.hideReporter}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-red-600 peer-focus:outline-none"></div>
+                    <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-700 min-w-[55px]">
+                    {form.hideReporter ? "Hidden" : "Visible"}
+                  </span>
                 </label>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
-                  Published Date
-                </label>
-                <input
-                  name="publishedDate"
-                  type="date"
-                  value={form.publishedDate}
-                  onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
-                />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Published Date
+                  </label>
+                  <input
+                    name="publishedDate"
+                    type="date"
+                    value={form.publishedDate}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Published Time
+                  </label>
+                  <input
+                    name="publishedTime"
+                    type="time"
+                    value={form.publishedTime}
+                    onChange={handleChange}
+                    className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -882,7 +1007,7 @@ const EditNews = () => {
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">Live app preview</span>
             </div>
 
-            <div className="h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2 custom-scrollbar">
+            <div className="h-[480px] sm:h-[600px] lg:h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2 custom-scrollbar">
               <div className="mb-[10px] overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
                 {previewImageUrl && (
                   <div className="relative w-full overflow-hidden bg-white" style={{ height: 300 }}>
@@ -916,15 +1041,27 @@ const EditNews = () => {
                 <div className="p-4">
                   <div className="mb-[10px] flex items-start justify-between gap-2">
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px] pr-1">
-                      <span
-                        className="shrink-0 rounded-full px-[11px] py-[5px] text-[11px] font-black uppercase"
-                        style={{
-                          backgroundColor: categories.find((cat) => cat._id === form.category)?.backgroundColor || '#F97316',
-                          color: categories.find((cat) => cat._id === form.category)?.textColor || '#FFFFFF',
-                        }}
-                      >
-                        {categories.find((cat) => cat._id === form.category)?.name || 'News'}
-                      </span>
+                      {(form.categories && form.categories.length > 0 ? form.categories : (form.category ? [form.category] : [])).map((catId) => {
+                        const cat = categories.find((c) => c._id === catId);
+                        if (!cat) return null;
+                        return (
+                          <span
+                            key={catId}
+                            className="shrink-0 rounded-full px-[11px] py-[5px] text-[11px] font-black uppercase shadow-sm"
+                            style={{
+                              backgroundColor: cat.backgroundColor || '#F97316',
+                              color: cat.textColor || '#FFFFFF',
+                            }}
+                          >
+                            {cat.name}
+                          </span>
+                        );
+                      })}
+                      {(!form.categories || form.categories.length === 0) && !form.category && (
+                        <span className="shrink-0 rounded-full bg-[#F97316] px-[11px] py-[5px] text-[11px] font-black uppercase text-white">
+                          News
+                        </span>
+                      )}
 
                       {(form.cities || []).map((cityId) => {
                         const city = cities.find((entry) => entry._id === cityId);
@@ -946,7 +1083,11 @@ const EditNews = () => {
                         <rect x="3" y="5" width="18" height="16" rx="2" />
                         <path d="M16 3v4M8 3v4M3 11h18" />
                       </svg>
-                      <span>{form.publishedDate ? new Date(`${form.publishedDate}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today'}</span>
+                      <span>
+                        {form.publishedDate
+                          ? `${new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${new Date(`${form.publishedDate}T${form.publishedTime || "00:00"}:00`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`
+                          : 'Today'}
+                      </span>
                     </div>
                   </div>
 

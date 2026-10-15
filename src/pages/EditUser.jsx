@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
+import { formatErrorMessage } from "../utils/errorMessage";
 
 const EditUser = () => {
   const { id } = useParams();
@@ -26,7 +27,7 @@ const EditUser = () => {
         password: "",
       });
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load user");
+      toast.error(formatErrorMessage(error, "Failed to load user"));
     } finally {
       setFetching(false);
     }
@@ -49,7 +50,7 @@ const EditUser = () => {
       toast.success("User updated successfully");
       navigate("/users");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update user");
+      toast.error(formatErrorMessage(error, "Failed to update user"));
     } finally {
       setLoading(false);
     }
