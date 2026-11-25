@@ -460,19 +460,23 @@ const EditNews = () => {
       formData.append('publishedDate', combinedDateTime);
       formData.append('cities', JSON.stringify(form.cities || []));
       formData.append('mediaToKeep', JSON.stringify(mediaToKeep));
-      formData.append('sendNotification', form.sendNotification);
+      formData.append('sendNotification', String(form.sendNotification === true));
       
       selectedFiles.forEach(file => {
         formData.append('media', file);
       });
 
-      await axiosInstance.put(`/news/${id}`, formData, {
+      const res = await axiosInstance.put(`/news/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       
-      toast.success("News updated successfully");
+      const notification = res.data?.notification;
+      if (notification?.skipped) toast.success("News updated. Notification skipped.");
+      else if (notification?.success === false) toast.warning("News updated, but notification delivery failed.");
+      else if (notification) toast.success(`News updated. Notifications sent: ${notification.sent || 0}`);
+      else toast.success("News updated successfully");
       navigate("/news");
     } catch (error) {
       toast.error(formatErrorMessage(error, "Failed to update news"));
@@ -887,7 +891,7 @@ const EditNews = () => {
                 <div className="pr-4">
                   <p className="font-bold text-slate-800">Send Notification For This Edit</p>
                   <p className="text-xs text-slate-500">
-                    Turned off by default. Turn on to update this news and send a push notification.
+                    Off by default. Turn on to send a push notification if this news is visible.
                   </p>
                 </div>
                 <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">

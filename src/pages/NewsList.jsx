@@ -270,7 +270,7 @@ const NewsList = () => {
 
     try {
       setTogglingActiveId(id);
-      const res = await axiosInstance.patch(`/news/${id}/toggle-active`);
+      const res = await axiosInstance.patch(`/news/${id}/toggle-active`, { sendNotification: false });
       const updatedNews = res.data?.data;
 
       if (updatedNews?._id) {

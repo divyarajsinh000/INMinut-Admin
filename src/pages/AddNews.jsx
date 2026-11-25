@@ -308,7 +308,7 @@ const AddNews = () => {
         : new Date().toISOString();
       formData.append('publishedDate', combinedDateTime);
       formData.append('cities', JSON.stringify(form.cities || []));
-      formData.append('sendNotification', form.sendNotification);
+      formData.append('sendNotification', String(form.sendNotification === true));
       
       selectedFiles.forEach((file) => {
         if (file instanceof File) {
@@ -326,7 +326,9 @@ const AddNews = () => {
       
       const notification = res.data?.notification;
       if (notification?.skipped) {
-        toast.success("News added. Firebase is not configured, so notification was skipped.");
+        toast.success("News added. Notification skipped.");
+      } else if (notification?.success === false) {
+        toast.warning("News added, but notification delivery failed.");
       } else if (notification) {
         toast.success(`News added. Notifications sent: ${notification.sent || 0}`);
       } else {
@@ -746,7 +748,7 @@ const AddNews = () => {
                 <div className="pr-4">
                   <p className="font-bold text-slate-800">Send Notification For This News</p>
                   <p className="text-xs text-slate-500">
-                    Turned off by default. Turn on to publish this news and send a push notification.
+                    Off by default. Turn on to send a push notification if this news is visible.
                   </p>
                 </div>
                 <label className="inline-flex shrink-0 cursor-pointer items-center gap-3">

@@ -8,82 +8,8 @@ import { formatErrorMessage } from "../utils/errorMessage";
 
 import ToggleSwitch from "../components/ToggleSwitch";
 
-const getPreviewUrl = (value = "") => {
-  const trimmed = value.trim();
-  if (!/^https?:\/\//i.test(trimmed) || trimmed.includes(" ") || /<(iframe|script|video|embed|object)/i.test(trimmed)) {
-    return "";
-  }
-
-  const youtubeMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([^"&?/\s]{11})/i);
-  return youtubeMatch?.[1]
-    ? `https://www.youtube.com/embed/${youtubeMatch[1]}`
-    : trimmed;
-};
-
-const EmbedAppPreview = ({ form }) => {
-  const height = Math.max(80, Number(form.height) || 250);
-  const code = form.embedCode?.trim() || "";
-  const previewUrl = getPreviewUrl(code);
-
-  return (
-    <div className="w-full rounded-[30px] border-4 border-slate-300 bg-slate-100 p-4 shadow-xl">
-      <div className="mb-2 text-center">
-        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-          Live app preview
-        </span>
-      </div>
-
-      <div className="h-[690px] overflow-y-auto rounded-[24px] bg-[#F8FAFC] p-2">
-        <div className="overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
-          <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-100 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-black text-slate-900">
-                {form.title?.trim() || "Embed card title"}
-              </p>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Embedded content
-              </p>
-            </div>
-            <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-900">
-              <svg className="h-[19px] w-[19px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <path d="M8.6 10.7l6.8-4M8.6 13.3l6.8 4" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="w-full overflow-hidden bg-white" style={{ height: `${height}px` }}>
-            {!code ? (
-              <div className="flex h-full items-center justify-center px-6 text-center text-sm font-bold text-slate-400">
-                Paste embed HTML or a direct URL to preview it here.
-              </div>
-            ) : previewUrl ? (
-              <iframe
-                title="Embed URL preview"
-                src={previewUrl}
-                className="h-full w-full border-0"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
-              />
-            ) : (
-              <iframe
-                title="Embed HTML preview"
-                srcDoc={code}
-                className="h-full w-full border-0"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-3 text-center text-xs font-semibold text-slate-500">
-          App card height: {height} px
-        </div>
-      </div>
-    </div>
-  );
-};
+import EmbedAppPreview from "../components/EmbedAppPreview";
+import EmbedCategoryPicker from "../components/EmbedCategoryPicker";
 
 const AddEmbed = () => {
   const navigate = useNavigate();
@@ -91,6 +17,7 @@ const AddEmbed = () => {
   const [form, setForm] = useState({
     title: "",
     embedCode: "",
+    shareUrl: "",
     height: 250,
     positionAfterNews: 5,
     isEnabled: true,
@@ -98,14 +25,18 @@ const AddEmbed = () => {
   });
 
   const [categories, setCategories] = useState([]);
+  const [categoriesReady, setCategoriesReady] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await axiosInstance.get("/categories?includeHidden=true");
-        setCategories(res.data.data);
+        const list = res.data?.data;
+        if (!Array.isArray(list)) throw new Error("Invalid category response");
+        setCategories(list);
+        setCategoriesReady(true);
       } catch (error) {
-        console.error("Failed to load categories");
+        toast.error("Failed to load categories. Please reload before saving.");
       }
     };
     fetchCategories();
@@ -122,6 +53,7 @@ const AddEmbed = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!categoriesReady) { toast.error("Categories are not loaded. Please reload before saving."); return; }
     if (!form.title.trim() || !form.embedCode.trim()) {
       toast.error("Title and Embed Code are required");
       return;
@@ -132,10 +64,11 @@ const AddEmbed = () => {
       await axiosInstance.post("/embeds", {
         title: form.title,
         embedCode: form.embedCode,
+        shareUrl: form.shareUrl.trim(),
         height: Number(form.height),
         positionAfterNews: Number(form.positionAfterNews),
         isEnabled: form.isEnabled,
-        categories: JSON.stringify(form.categories || []),
+        categories: form.categories || [],
       });
 
       toast.success("Embed card added successfully");
@@ -208,26 +141,37 @@ const AddEmbed = () => {
               <p className="text-xs text-slate-500 mt-1">Set to 0 to show at the very top of the feed, or 5 to show after 5 news items.</p>
             </div>
           </div>
+<div className="space-y-2">
+  <label className="block text-sm font-semibold">
+    Share URL
+    <span className="ml-2 text-xs font-normal text-gray-400">
+      (Optional)
+    </span>
+  </label>
 
+  <input
+    type="url"
+    name="shareUrl"
+    value={form.shareUrl}
+    onChange={(e) =>
+      setForm((prev) => ({
+        ...prev,
+        shareUrl: e.target.value,
+      }))
+    }
+    placeholder="https://example.com/content"
+    className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600"
+  />
+
+  <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+    This link will be shared when users click the share icon
+    in the mobile app. If left empty, the app will try to
+    extract a link from the embed code automatically.
+  </p>
+</div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Target Categories</label>
-            <select
-              name="categories"
-              value={form.categories || []}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions).map((opt) => opt.value);
-                setForm((prev) => ({ ...prev, categories: values }));
-              }}
-              multiple
-              className="w-full border rounded-xl px-4 py-3 min-h-[130px] outline-none focus:ring-2 focus:ring-red-500"
-            >
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-slate-500 mt-1">Hold Ctrl (or Cmd) to select multiple. Leave empty to show in all categories.</p>
+            <EmbedCategoryPicker categories={categories} value={form.categories} ready={categoriesReady} onChange={(values) => setForm((prev) => ({ ...prev, categories: values }))} />
           </div>
 
           <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
@@ -244,7 +188,7 @@ const AddEmbed = () => {
           <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !categoriesReady}
               className="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600 disabled:opacity-60"
             >
               {loading ? "Saving..." : "Add Embed"}
