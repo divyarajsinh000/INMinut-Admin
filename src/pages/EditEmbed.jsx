@@ -20,6 +20,8 @@ const EditEmbed = () => {
     embedCode: "",
     shareUrl: "",
     height: 250,
+    width: "",
+    autoSize: false,
     positionAfterNews: 5,
     isEnabled: true,
     categories: [],
@@ -63,7 +65,9 @@ const EditEmbed = () => {
           title: data.title || "",
           embedCode: data.embedCode || "",
           shareUrl: data.shareUrl || "",
-          height: data.height || 250,
+          height: Math.max(80, Math.min(4000, Number(data.height) || 250)),
+          width: data.width ?? "",
+          autoSize: data.autoSize === true,
           positionAfterNews: data.positionAfterNews !== undefined ? data.positionAfterNews : 5,
           isEnabled: data.isEnabled ?? true,
           categories: data.categories ? data.categories.map(c => c._id || c) : [],
@@ -101,6 +105,8 @@ const EditEmbed = () => {
         embedCode: form.embedCode,
         shareUrl: form.shareUrl.trim(),
         height: Number(form.height),
+        width: form.width === "" ? null : Number(form.width),
+        autoSize: form.autoSize,
         positionAfterNews: Number(form.positionAfterNews),
         isEnabled: form.isEnabled,
         categories: form.categories || [],
@@ -154,19 +160,32 @@ const EditEmbed = () => {
               <p className="text-xs text-slate-500 mt-1">Ensure the code contains correct responsive tags, or paste a direct URL (e.g., https://youtube.com/...).</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3 rounded-xl border border-slate-200 p-4">
+            <label className="block text-sm font-semibold text-slate-700">Display sizing</label>
+            <select name="sizingMode" value={form.autoSize ? "auto" : "manual"} onChange={(e) => setForm(prev => ({ ...prev, autoSize: e.target.value === "auto" }))} className="w-full rounded-lg border px-3 py-2">
+              <option value="manual">Custom / fixed height</option>
+              <option value="auto">Auto Fit (supported HTML)</option>
+            </select>
+            <label className="block text-sm font-semibold text-slate-700">Widget design width (px, optional)</label>
+            <input name="width" type="number" min="50" max="2000" step="1" value={form.width} onChange={handleChange} placeholder="Automatic / full available width" className="w-full rounded-lg border px-3 py-2" />
+            <p className="text-xs text-slate-500">Width scales down to fit smaller screens. Auto Fit detects supported HTML script sizes; other iframe content may require manual height.</p>
+            { /cdorgapi\.b-cdn\.net\/widgets\/(?:score|v?matchlist)\.js/i.test(form.embedCode) && <button type="button" onClick={() => setForm(prev => ({ ...prev, autoSize: true, width: "", height: /\/vmatchlist\.js/i.test(prev.embedCode) ? 620 : 320 }))} className="text-sm font-bold text-red-600 underline">Use supported HTML recommended sizing</button> }
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Card Height (in Pixels)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Fallback / Manual Height (px)</label>
                 <input
                   name="height"
                   type="number"
-                  min="50"
+                  min="80"
+                max="4000"
+                step="1"
                   value={form.height}
                   onChange={handleChange}
                   required
                   className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
                 />
-                <p className="text-xs text-slate-500 mt-1">Height of the container in the app feed (e.g. 250).  always add 20PX more then the actual height.</p>
+                <p className="text-xs text-slate-500 mt-1">Used in Manual mode or when Auto Fit cannot measure the content.</p>
               </div>
 
               <div>
@@ -184,6 +203,11 @@ const EditEmbed = () => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Share URL (Optional)</label>
+              <input type="url" name="shareUrl" value={form.shareUrl} onChange={handleChange} placeholder="https://example.com/content" className="w-full border rounded-xl px-4 py-3" />
+              <p className="text-xs text-slate-500 mt-1">Public link sent when sharing this embed.</p>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Target Categories</label>
               <EmbedCategoryPicker categories={categories} value={form.categories} ready={categoriesReady} onChange={(values) => setForm((prev) => ({ ...prev, categories: values }))} />

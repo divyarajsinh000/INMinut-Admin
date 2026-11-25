@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getEmbedSizing, embedSizingCss, embedSizingScript } from "../utils/embedSizing";
 function normalizeEmbedUrl(value) {
   value = value.trim();
   if (!/^(https?:\/\/|\/\/)/i.test(value) || /\s/.test(value)) return "";
@@ -20,53 +22,27 @@ function normalizeEmbedUrl(value) {
   return url.href;
 }
 
-const buildHtmlDocument = (html = "") => `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <base target="_blank" />
-    <style>
-      html, body {
-        width: 100%;
-        min-height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: auto;
-        background: transparent;
-      }
-      *, *::before, *::after { box-sizing: border-box; }
-      iframe, video, embed, object, img, svg, canvas {
-        max-width: 100% !important;
-      }
-      iframe, video, embed, object {
-        width: 100% !important;
-        border: 0;
-      }
-    </style>
-  </head>
-  <body>${html}</body>
-</html>`;
-
-const getPreviewData = (value = "") => {
-  const code = typeof value === "string" ? value.trim() : "";
-
-  if (!code) return { type: "empty", value: "" };
-
-  // A directly pasted link.
-  const directUrl = normalizeEmbedUrl(code);
-  if (directUrl) return { type: "url", value: directUrl };
-
-  // Generic HTML, script widgets, blockquotes, video tags and other snippets.
-  return {
-    type: "html",
-    value: buildHtmlDocument(code),
-  };
-};
+const escapeAttribute = value => value.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const buildHtmlDocument = (code, sizing, key) => `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="referrer" content="strict-origin-when-cross-origin"/><style>${embedSizingCss(sizing)}</style></head><body><div id="embed-fit"><div id="embed-content">${code}</div></div>${embedSizingScript(sizing,key)}${/instagram-media/i.test(code) && !/instagram\.com\/embed\.js/i.test(code) ? '<script async src="https://www.instagram.com/embed.js"></script>' : ""}</body></html>`;
 
 export default function EmbedAppPreview({ form }) {
-  const height = Math.max(80, Number(form.height) || 250);
-  const preview = getPreviewData(form.embedCode);
+  const code = String(form.embedCode || "").trim();
+  const sizing = useMemo(() => getEmbedSizing(code, form.height, form.width, form.autoSize === true), [code, form.height, form.width, form.autoSize]);
+  const key = JSON.stringify([code, form.height, form.width, form.autoSize]);
+  const iframeRef = useRef(null);
+  const [measurement, setMeasurement] = useState(null);
+  const height = sizing.autoSize && measurement?.key === key ? measurement.height : sizing.fallbackHeight;
+  const directUrl = normalizeEmbedUrl(code);
+  const html = useMemo(() => buildHtmlDocument(directUrl ? `<iframe src="${escapeAttribute(directUrl)}" width="100%" height="${Math.max(60,sizing.fallbackHeight-16)}" style="border:0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>` : code, sizing, key), [code, directUrl, sizing, key]);
+  useEffect(() => {
+    const receive = event => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      const data = event.data;
+      if (sizing.autoSize && data?.type === "embed-size" && data.key === key && typeof data.height === "number" && Number.isFinite(data.height)) setMeasurement({ key, height: Math.max(80, Math.min(4000, Math.round(data.height))) });
+    };
+    window.addEventListener("message",receive);
+    return () => window.removeEventListener("message",receive);
+  }, [key, sizing.autoSize]);
 
   return (
     <div className="w-full rounded-[30px] border-4 border-slate-300 bg-slate-100 p-4 shadow-xl">
@@ -98,42 +74,20 @@ export default function EmbedAppPreview({ form }) {
           </div>
 
           <div className="w-full overflow-hidden bg-white" style={{ height: `${height}px` }}>
-            {preview.type === "empty" ? (
-              <div className="flex h-full items-center justify-center px-6 text-center text-sm font-bold text-slate-400">
-                Paste embed HTML or a direct URL to preview it here.
-              </div>
-            ) : preview.type === "url" ? (
-              <iframe
-                key={preview.value}
-                title="Embed URL preview"
-                src={preview.value}
-                sandbox="allow-scripts allow-forms allow-popups allow-presentation"
-                className="h-full w-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
+            {!code ? (
+              <div className="flex h-full items-center justify-center px-6 text-center text-sm font-bold text-slate-400">Paste embed HTML or a direct URL to preview it here.</div>
             ) : (
-              <iframe
-                key={preview.value}
-                title="Embed HTML preview"
-                srcDoc={preview.value}
-                className="h-full w-full border-0"
-                sandbox="allow-scripts allow-forms allow-popups allow-presentation"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
+              <iframe ref={iframeRef} key={key} title="Embed preview" srcDoc={html} className="h-full w-full border-0" sandbox="allow-scripts allow-forms allow-popups allow-presentation" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
             )}
           </div>
         </div>
 
         <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-3 text-center text-xs font-semibold text-slate-500">
-          App card height: {height} px
+          {sizing.autoSize ? "Auto Fit" : "Manual"} · Content height: {height} px
         </div>
 
-        {preview.type === "url" && (
-          <a href={preview.value} target="_blank" rel="noopener noreferrer" className="mt-3 block text-center text-sm font-semibold text-red-600 underline">Open link in browser</a>
+        {directUrl && (
+          <a href={directUrl} target="_blank" rel="noopener noreferrer" className="mt-3 block text-center text-sm font-semibold text-red-600 underline">Open link in browser</a>
         )}
         <p className="mt-2 px-2 text-center text-[11px] font-semibold leading-4 text-slate-400">
           Some providers block third-party iframe previews using their own security headers. Those embeds cannot be forced to load from the frontend.
