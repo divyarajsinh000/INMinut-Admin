@@ -180,18 +180,9 @@ const AddAdvertisement = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Card Height (in Pixels)</label>
-              <input
-                name="height"
-                type="number"
-                min="80"
-                value={form.height}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500"
-              />
-              <p className="text-xs text-slate-500 mt-1">Controls the advertisement image height in the app feed.</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-sm font-semibold text-slate-700">Automatic Image Height</p>
+              <p className="mt-1 text-xs text-slate-500">The image fills the card width and keeps its original proportions. No manual height is required.</p>
             </div>
 
             <div>
@@ -248,13 +239,13 @@ const AddAdvertisement = () => {
               <div className="overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-[0_12px_28px_rgba(14,165,233,0.14)]">
                 <div
                   className="relative w-full overflow-hidden bg-slate-100"
-                  style={{ height: `${Math.max(80, Number(form.height) || 250)}px` }}
+                  style={preview ? undefined : { aspectRatio: "332 / 250" }}
                 >
                   {preview ? (
                     <img
                       src={preview}
                       alt={form.name || "Advertisement preview"}
-                      className="h-full w-full object-cover object-center"
+                      className="block w-full h-auto"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center px-6 text-center text-sm font-bold text-slate-400">
@@ -284,7 +275,7 @@ const AddAdvertisement = () => {
               </div>
 
               <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-3 text-center text-xs font-semibold text-slate-500">
-                App card height: {Math.max(80, Number(form.height) || 250)} px
+                Image height adjusts automatically to its original aspect ratio.
               </div>
             </div>
           </div>

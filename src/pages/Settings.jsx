@@ -4,7 +4,7 @@ import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import { formatErrorMessage } from "../utils/errorMessage";
 import { getFullMediaUrl } from "../components/MediaPreview";
-import { FiUpload, FiImage } from "react-icons/fi";
+import { FiUpload, FiImage, FiTrash2 } from "react-icons/fi";
 import ImageCropModal from "../components/ImageCropModal";
 import { useSettings } from "../context/SettingsContext";
 
@@ -25,6 +25,7 @@ const Settings = () => {
     defaultShareImage: null,
   });
 
+  const [removed, setRemoved] = useState({});
   const [cropFile, setCropFile] = useState(null);
   const [activeCropField, setActiveCropField] = useState(null);
 
@@ -82,6 +83,9 @@ const Settings = () => {
     try {
       setSaving(true);
       const formData = new FormData();
+      Object.keys(removed).forEach(field => {
+        if (removed[field] && !files[field]) formData.append(`remove_${field}`, "true");
+      });
       if (files.appLogo) formData.append("appLogo", files.appLogo);
       if (files.appIcon) formData.append("appIcon", files.appIcon);
       if (files.defaultNewsImage) formData.append("defaultNewsImage", files.defaultNewsImage);
@@ -95,6 +99,7 @@ const Settings = () => {
       if (res.data.settings) {
         setSettings(res.data.settings);
         setFiles({ appLogo: null, appIcon: null, defaultNewsImage: null, defaultShareImage: null });
+        setRemoved({});
         reloadSettings();
       }
     } catch (error) {
@@ -105,7 +110,7 @@ const Settings = () => {
   };
 
   const renderImageUpload = (title, field, description) => {
-    const currentValue = settings[field];
+    const currentValue = removed[field] ? "" : settings[field];
     const pendingFile = files[field];
     const previewUrl = pendingFile ? URL.createObjectURL(pendingFile) : currentValue ? getFullMediaUrl(currentValue) : null;
 
@@ -120,11 +125,18 @@ const Settings = () => {
             Choose New Image
             <input 
               type="file" 
+              disabled={saving}
               accept="image/*" 
               className="hidden" 
               onChange={(e) => handleFileChange(e, field)}
             />
           </label>
+          {(currentValue || pendingFile) && <button type="button" disabled={saving} onClick={() => {
+            setFiles(prev => ({ ...prev, [field]: null }));
+            setRemoved(prev => ({ ...prev, [field]: true }));
+          }} className="ml-2 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-red-600 hover:bg-red-50"><FiTrash2 /> Remove image</button>}
+          {removed[field] && !pendingFile && <button type="button" disabled={saving} onClick={() => setRemoved(prev => ({ ...prev, [field]: false }))} className="ml-2 text-sm text-slate-600">Undo removal</button>}
+          {removed[field] && !pendingFile && <p className="mt-2 text-xs text-red-600">Image will be removed when you save settings.</p>}
         </div>
         
         <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center overflow-hidden shrink-0 relative">

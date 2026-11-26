@@ -22,6 +22,10 @@ const EditEmbed = () => {
     height: 250,
     width: "",
     autoSize: false,
+    widthMode: "contain",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    alignment: "center",
     positionAfterNews: 5,
     isEnabled: true,
     categories: [],
@@ -68,6 +72,10 @@ const EditEmbed = () => {
           height: Math.max(80, Math.min(4000, Number(data.height) || 250)),
           width: data.width ?? "",
           autoSize: data.autoSize === true,
+          widthMode: data.widthMode ?? "contain",
+          paddingHorizontal: data.paddingHorizontal ?? 8,
+          paddingVertical: data.paddingVertical ?? 8,
+          alignment: data.alignment ?? "center",
           positionAfterNews: data.positionAfterNews !== undefined ? data.positionAfterNews : 5,
           isEnabled: data.isEnabled ?? true,
           categories: data.categories ? data.categories.map(c => c._id || c) : [],
@@ -107,6 +115,10 @@ const EditEmbed = () => {
         height: Number(form.height),
         width: form.width === "" ? null : Number(form.width),
         autoSize: form.autoSize,
+        widthMode: form.widthMode,
+        paddingHorizontal: Number(form.paddingHorizontal),
+        paddingVertical: Number(form.paddingVertical),
+        alignment: form.alignment,
         positionAfterNews: Number(form.positionAfterNews),
         isEnabled: form.isEnabled,
         categories: form.categories || [],
@@ -168,8 +180,27 @@ const EditEmbed = () => {
             </select>
             <label className="block text-sm font-semibold text-slate-700">Widget design width (px, optional)</label>
             <input name="width" type="number" min="50" max="2000" step="1" value={form.width} onChange={handleChange} placeholder="Automatic / full available width" className="w-full rounded-lg border px-3 py-2" />
-            <p className="text-xs text-slate-500">Width scales down to fit smaller screens. Auto Fit detects supported HTML script sizes; other iframe content may require manual height.</p>
-            { /cdorgapi\.b-cdn\.net\/widgets\/(?:score|v?matchlist)\.js/i.test(form.embedCode) && <button type="button" onClick={() => setForm(prev => ({ ...prev, autoSize: true, width: "", height: /\/vmatchlist\.js/i.test(prev.embedCode) ? 620 : 320 }))} className="text-sm font-bold text-red-600 underline">Use supported HTML recommended sizing</button> }
+            <label className="block text-sm font-semibold text-slate-700">Width display mode</label>
+            <select name="widthMode" value={form.widthMode} onChange={handleChange} className="w-full rounded-lg border px-3 py-2">
+              <option value="contain">Fit Inside — scale down only</option>
+              <option value="fill">Full Width — scale up or down</option>
+              <option value="original">Original Size — scroll if wider than card</option>
+            </select>
+            <div className="grid grid-cols-2 gap-3">
+              {[["paddingHorizontal", "Horizontal padding"], ["paddingVertical", "Vertical padding"]].map(([name, label]) => (
+                <label key={name} className="block text-sm font-semibold text-slate-700">
+                  {label} (px)
+                  <input name={name} type="number" min="0" max="50" step="1" required value={form[name]} onChange={handleChange} className="mt-1 w-full rounded-lg border px-3 py-2" />
+                </label>
+              ))}
+            </div>
+            <label className="block text-sm font-semibold text-slate-700">Content alignment</label>
+            <select name="alignment" value={form.alignment} onChange={handleChange} className="w-full rounded-lg border px-3 py-2">
+              <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+            </select>
+            <button type="button" onClick={() => setForm(prev => ({ ...prev, autoSize: false, width: "", height: 250, widthMode: "contain", paddingHorizontal: 8, paddingVertical: 8, alignment: "center" }))} className="text-sm font-semibold text-slate-600 underline">Reset display settings</button>
+            <p className="text-xs text-slate-500">Auto Fit measures outer content; remote iframe content may require manual height.</p>
+            { /cdorgapi\.b-cdn\.net\/widgets\/(?:score|v?matchlist)\.js/i.test(form.embedCode) && <button type="button" onClick={() => setForm(prev => ({ ...prev, autoSize: true, width: "", widthMode: "fill", paddingHorizontal: 0, paddingVertical: 0, alignment: "center", height: /\/vmatchlist\.js/i.test(prev.embedCode) ? 620 : 320 }))} className="text-sm font-bold text-red-600 underline">Use CricketData recommended sizing</button> }
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

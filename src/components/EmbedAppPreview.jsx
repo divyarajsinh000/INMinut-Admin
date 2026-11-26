@@ -19,21 +19,25 @@ function normalizeEmbedUrl(value) {
     const id = parts[0] === "video" ? parts[1] : parts[0];
     if (/^\d+$/.test(id || "")) return `https://player.vimeo.com/video/${id}${url.search}`;
   }
+  if (host === "open.spotify.com") {
+    const [kind, id] = parts[0] === "embed" ? parts.slice(1) : parts;
+    if (["track", "episode", "album", "playlist", "show", "artist"].includes(kind) && /^[a-zA-Z0-9]+$/.test(id || "")) return `https://open.spotify.com/embed/${kind}/${id}`;
+  }
   return url.href;
 }
 
 const escapeAttribute = value => value.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-const buildHtmlDocument = (code, sizing, key) => `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="referrer" content="strict-origin-when-cross-origin"/><style>${embedSizingCss(sizing)}</style></head><body><div id="embed-fit"><div id="embed-content">${code}</div></div>${embedSizingScript(sizing,key)}${/instagram-media/i.test(code) && !/instagram\.com\/embed\.js/i.test(code) ? '<script async src="https://www.instagram.com/embed.js"></script>' : ""}</body></html>`;
+const buildHtmlDocument = (code, sizing, key) => `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="referrer" content="strict-origin-when-cross-origin"/><style>blockquote,iframe,video,img,embed,object{max-width:100% !important;box-sizing:border-box !important;border-radius:8px;} ${embedSizingCss(sizing)}</style></head><body><div id="embed-fit"><div id="embed-content">${code}</div></div>${embedSizingScript(sizing,key)}${/instagram-media/i.test(code) && !/instagram\.com\/embed\.js/i.test(code) ? '<script async src="https://www.instagram.com/embed.js"></script>' : ""}</body></html>`;
 
 export default function EmbedAppPreview({ form }) {
   const code = String(form.embedCode || "").trim();
-  const sizing = useMemo(() => getEmbedSizing(code, form.height, form.width, form.autoSize === true), [code, form.height, form.width, form.autoSize]);
-  const key = JSON.stringify([code, form.height, form.width, form.autoSize]);
+  const sizing = useMemo(() => getEmbedSizing(code, form.height, form.width, form.autoSize === true, { widthMode: form.widthMode, paddingHorizontal: form.paddingHorizontal, paddingVertical: form.paddingVertical, alignment: form.alignment }), [code, form.height, form.width, form.autoSize, form.widthMode, form.paddingHorizontal, form.paddingVertical, form.alignment]);
+  const key = JSON.stringify([code, form.height, form.width, form.autoSize, form.widthMode, form.paddingHorizontal, form.paddingVertical, form.alignment]);
   const iframeRef = useRef(null);
   const [measurement, setMeasurement] = useState(null);
   const height = sizing.autoSize && measurement?.key === key ? measurement.height : sizing.fallbackHeight;
   const directUrl = normalizeEmbedUrl(code);
-  const html = useMemo(() => buildHtmlDocument(directUrl ? `<iframe src="${escapeAttribute(directUrl)}" width="100%" height="${Math.max(60,sizing.fallbackHeight-16)}" style="border:0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>` : code, sizing, key), [code, directUrl, sizing, key]);
+  const html = useMemo(() => buildHtmlDocument(directUrl ? `<iframe src="${escapeAttribute(directUrl)}" width="100%" height="${Math.max(60,sizing.fallbackHeight-2*sizing.paddingVertical)}" style="border:0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>` : code, sizing, key), [code, directUrl, sizing, key]);
   useEffect(() => {
     const receive = event => {
       if (event.source !== iframeRef.current?.contentWindow) return;
